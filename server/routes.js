@@ -17,6 +17,16 @@ exports.endpoints = [
   	method: 'get',
   	path: '/produtos',
   	config: Produto.getProducts 
+  },
+  {
+    method: 'get',
+    path:'/produto/{_id}',
+    config: Produto.getProductById
+  },
+  {
+    method: 'delete',
+    path:'/produto/{_id}',
+    config: Produto.remove
   }
 
 ];

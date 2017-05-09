@@ -12,13 +12,21 @@ var Joi = require('joi'),
   findRemoveSync = require('find-remove');
 
 
-   function validateChildren(produto, children){
-    var ret = true;
-    for (var i = 0; i < children.length; i++) {
-        ret = ret && (children[i].childrenId != produto);
-    }
-    return ret;
+function validateChildren(produto, listOfAncestors){
+  var ret = true;
+  var children = produto.children;
+
+  if(listOfAncestors.indexOf(produto._id) != -1) {
+    return false;
   }
+
+  listOfAncestors.push(produto._id);
+  for (var i = 0; i < children.length; i++) { 
+    ret = ret && validateChildren(children[i].childrenId, listOfAncestors);
+  }
+  listOfAncestors.splice(listOfAncestors.indexOf(produto._id),1);
+  return ret;
+}
 
 
 exports.create = {
@@ -26,7 +34,7 @@ exports.create = {
     payload: {
       code : Joi.string().required(),
       name : Joi.string().required(),
-      family : Joi.string(),
+      family : Joi.string(),  
       description : Joi.string(),
       amountInStock : Joi.number(),
       unit : Joi.string(),
@@ -51,12 +59,25 @@ exports.create = {
 };
 
 exports.remove = {
-  //TODO
+  validate: {
+    params : {
+      _id: Joi.string().required()
+    }
+  },
+  handler: function(request, reply) {
+    Produto.findByIdAndRemove(request.params._id, function(err, doc) {
+      if (!err) {
+        return reply().code(204);
+      }
+      return reply(Boom.badData());
+    })
+  }
 };
 
 exports.update = {
   validate : {
     payload : {
+      _id : Joi.string().required(),
       code : Joi.string().required(),
       name : Joi.string().required(),
       family : Joi.string(),
@@ -72,9 +93,14 @@ exports.update = {
     }
   },
   handler: function (request, reply) {
-    if(!validateChildren(request.params._id ,request.payload.children)) {
+    
+    if(request.params._id != request.payload._id) {
+      return reply(Boom.badData('Payload has different Id than path parameter'));   //HTTP 422 Error
+    };
+
+    if(!validateChildren(request.payload,[])) {
       return reply(Boom.badData('A Product cannot reference itself as a children'));   //HTTP 422 Error
-    }
+    };
 
     var query = {};
     query._id = request.params._id;
@@ -111,4 +137,21 @@ exports.getProducts = {
       reply(Boom.BadData(err)); //HTTP 500 error
     });
   }
+};
+
+exports.getProductById = {
+  validate : {
+    params : {
+      _id : Joi.string().required()
+    }
+  },
+  handler: function(request, reply) {
+    Produto.findById(request.params._id, function(err, doc) {
+      if (err) {
+        return reply(Boom.badData('Product not found'));
+      }
+      return reply(doc);
+    });
+  }
+
 };
