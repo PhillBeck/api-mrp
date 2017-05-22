@@ -6,8 +6,6 @@ var mongoose = require('mongoose'),
   mongooseAggregatePaginate = require('mongoose-aggregate-paginate'),
   neomongoose = require('neomongoose');
 
-
-
 /**
   * @module  Produto
   * @description Produto schema
@@ -22,7 +20,8 @@ var ProdutoSchema = new Schema({
   amountInStock: {type: Number},
   unit:          {type: String},
   leadTime:      {type: Number},
-  costValue:     {type: Number},
+  purchasePrice: {type: Number},
+  costValue:     {type: Number}
 });
 
 ProdutoSchema.plugin(mongoosePaginate);

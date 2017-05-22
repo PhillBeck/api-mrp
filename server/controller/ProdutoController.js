@@ -42,8 +42,7 @@ exports.create = {
 			amountInStock: Joi.number(),
 			unit:          Joi.string(),
 			leadTime:      Joi.number(),
-			costValue:     Joi.number(),
-			structure:     Joi.string()
+			purchasePrice: Joi.number()
 		} 
 	},
 	handler: function (request, reply) {
@@ -90,12 +89,12 @@ exports.update = {
 			code:          Joi.string().required(),
 			name:          Joi.string().required(),
 			family:        Joi.string(),
-			productType:   Joi.string(), 
+			productType:   Joi.string(),
 			description:   Joi.string(),
 			amountInStock: Joi.number(),
 			unit:          Joi.string(),
 			leadTime:      Joi.number(),
-			costValue:     Joi.number(),
+			purchasePrice: Joi.number()
 		}
 	},
 	handler: function (request, reply) {
@@ -201,17 +200,19 @@ exports.getChildren ={
 	},
 	handler: function(request, reply) {
 		
-		var config = {
-			depth: 0,
-			direction: '<',
-			recordsPerPage: '5',
-			page: 0,
-			document: {}
-		};
+	var searchConfig = {
+		depth: 0,
+		direction: '<',
+		recordsPerPage: 2,
+		page: 0,
+		document : {}
+	};
 
-		config.document._id = request.params._id;
+		searchConfig.document._id = request.params._id;
 
-		Produto.getRelationships(config, function(err, obj) {
+		console.log(JSON.stringify(searchConfig));
+
+		Produto.getRelationships(searchConfig, function(err, obj) {
 			if (!err) {
 				return reply(obj);
 			}
@@ -219,8 +220,6 @@ exports.getChildren ={
 			console.log(err);
 			return reply(Boom.badData(JSON.stringify(err)));
 
-		})
-
-
+		});
 	}
 };
