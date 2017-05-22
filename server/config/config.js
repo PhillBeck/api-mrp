@@ -16,6 +16,6 @@ module.exports = {
   neo4j: {
     url: 'bolt://localhost',
     user: 'neo4j',
-    password: 'omfgxd512'
+    password: 'q1w2e3www'
   }
 };

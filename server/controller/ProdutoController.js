@@ -192,7 +192,7 @@ exports.addChildren = {
 	}
 };
 
-exports.getChildren ={
+exports.getChildren = {
 	validate: {
 		params: {
 			_id: Joi.string().required()
@@ -200,17 +200,15 @@ exports.getChildren ={
 	},
 	handler: function(request, reply) {
 		
-	var searchConfig = {
-		depth: 0,
-		direction: '<',
-		recordsPerPage: 2,
-		page: 0,
-		document : {}
-	};
+		var searchConfig = {
+			depth: 0,
+			direction: '<',
+			recordsPerPage: 2,
+			page: 0,
+			document : {}
+		};
 
 		searchConfig.document._id = request.params._id;
-
-		console.log(JSON.stringify(searchConfig));
 
 		Produto.getRelationships(searchConfig, function(err, obj) {
 			if (!err) {
@@ -219,7 +217,31 @@ exports.getChildren ={
 
 			console.log(err);
 			return reply(Boom.badData(JSON.stringify(err)));
+		});
+	}
+};
 
+
+exports.removeChildren = {
+	validate: {
+		params: {
+			_parentId: Joi.string().required(),
+			_childId: Joi.string().required()
+		}
+	},
+	handler: function(request, reply) {
+
+		var config = new DocNode();
+		config.node.data.parentNode._id = _parentId;
+		config.node.data.sonNode._id = _childId;
+
+		Produto.disassociate(config, function(err, obj) {
+			if (!err) {
+				return reply().code(204);
+			}
+
+			console.log(err);
+			return reply(Boom.badData(JSON.stringify(err)));
 		});
 	}
 };

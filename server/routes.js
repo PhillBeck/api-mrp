@@ -37,5 +37,10 @@ exports.endpoints = [
     method: 'get',
     path: '/products/{_id}/children',
     config: Produto.getChildren
+  },
+  {
+    method: 'delete',
+    path: '/products/{_parentId}/children/{_childId}',
+    config: Produto.removeChildren
   }
 ];
