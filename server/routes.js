@@ -1,6 +1,5 @@
 // Load modules
 var Produto = require('./controller/ProdutoController');
-var Structure = require('./controller/StructureController');
 
 // API Server Endpoints
 exports.endpoints = [
