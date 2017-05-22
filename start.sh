@@ -1,4 +1,5 @@
 #!/bin/bash
 
 sudo service mongod start
-nodemon
+neo4j console&
+nodemon&

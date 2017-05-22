@@ -1,9 +1,9 @@
 'use strict';
 
 var assert = require('assert'),
-	  axios = require('axios'),
-    config = require('./config').config,
-    expect = require('chai').expect;
+axios = require('axios'),
+config = require('./config').config,
+expect = require('chai').expect;
 
 var testProduct1 = {
   code: 'Test1',
@@ -31,52 +31,52 @@ var testProduct2 = {
 
 describe('Create Product', function() {
 
- describe('#Create Product', function() {
-  it('Should return 201', function() {
-   var __self = this;
-   return axios.post(config.hostCreate, testProduct1).then(function(response) {
-    __self.testProduct1 = response.data;
-    expect(response.status).to.equal(201);
-  });
- });
-
-  after(function() {
-    var __self = this;
-    return axios.delete(config.hostDelete + __self.testProduct1._id).then(function(response) {});
-  });
-
-});
-
-
-
- describe('#Duplicate Product', function(){
-  before(function() {
-    var __self = this;
-    return axios.post(config.hostCreate, testProduct2).then(function(response){
-      __self.testProduct2 = response.data;
-    });
-  });
-
-  after(function() {
-    var __self = this;
-    return axios.delete(config.hostDelete + __self.testProduct2._id).then(function(response) {});
-  });
-
-
-  it('Should return 422', function() {
-    setTimeout( function() {
+  describe('#Create Product', function() {
+    it('Should return 201', function() {
       var __self = this;
-      var testReject = __self.testProduct2
-      delete testReject._id;
-      delete testReject.__v;    //Timeout set to avoid concurrency issues while writing to MongoDB
-      return axios.post(config.hostCreate, testReject).then(function(response) {
-        expect(response.status).to.equal(422);
-      }).catch(function (err) {
-        expect(err.response.status).to.equal(422);
+      return axios.post(config.hostCreate, testProduct1).then(function(response) {
+        __self.testProduct1 = response.data;
+        expect(response.status).to.equal(201);
       });
-    }, 1000);
-  })
-});
+    });
+
+    after(function() {
+      var __self = this;
+      return axios.delete(config.hostDelete + __self.testProduct1._id).then(function(response) {});
+    });
+
+  });
+
+
+
+  describe('#Duplicate Product', function(){
+    before(function() {
+      var __self = this;
+      return axios.post(config.hostCreate, testProduct2).then(function(response){
+        __self.testProduct2 = response.data;
+      });
+    });
+
+    after(function() {
+      var __self = this;
+      return axios.delete(config.hostDelete + __self.testProduct2._id).then(function(response) {});
+    });
+
+
+    it('Should return 422', function() {
+      setTimeout( function() {
+        var __self = this;
+        var testReject = __self.testProduct2
+        delete testReject._id;
+        delete testReject.__v;
+        return axios.post(config.hostCreate, testReject).then(function(response) {
+          expect(response.status).to.equal(422);
+        }).catch(function (err) {
+          expect(err.response.status).to.equal(422);
+        });
+      }, 1000);
+    })
+  });
 });
 
 describe('Update Product', function() {
@@ -105,7 +105,7 @@ describe('Update Product', function() {
       });
 
     });
-    
+
   });
 
 });
