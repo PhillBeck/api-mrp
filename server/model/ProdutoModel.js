@@ -15,7 +15,6 @@ var mongoose = require('mongoose'),
 
 var ProdutoSchema = new Schema({
   code:          {type: String, required: true, unique: true},
-  model:         {type: String, required: true},
   name:          {type: String, required: true},
   family:        {type: String},
   productType:   {type: String},
