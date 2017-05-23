@@ -85,7 +85,6 @@ exports.remove = {
 exports.update = {
 	validate : {
 		payload : {
-			_id:           Joi.string().required(),
 			code:          Joi.string().required(),
 			name:          Joi.string().required(),
 			family:        Joi.string(),
@@ -95,17 +94,16 @@ exports.update = {
 			unit:          Joi.string(),
 			leadTime:      Joi.number(),
 			purchasePrice: Joi.number()
+		},
+		params: {
+			_id:  		   Joi.string().required()
 		}
 	},
 	handler: function (request, reply) {
-
-		if(request.params._id != request.payload._id) {
-			return reply(Boom.badData('Payload has different Id than path parameter'));
-		};
-
 		var config = new DocNode();
 
 		config.document = request.payload;
+		config.document._id = request.params._id;
 
 		Produto.updateDocNode(config, function(err, obj) {
 			if (!err) {
