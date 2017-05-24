@@ -1,5 +1,6 @@
 // Load modules
 var Produto = require('./controller/ProdutoController');
+var Necessitiy = require('./controller/NecessityController');
 
 // API Server Endpoints
 exports.endpoints = [
@@ -42,5 +43,10 @@ exports.endpoints = [
     method: 'delete',
     path: '/products/{_parentId}/children/{_childId}',
     config: Produto.removeChildren
+  },
+  {
+    method: 'post',
+    path: '/necessities',
+    config: Necessitiy.create
   }
 ];

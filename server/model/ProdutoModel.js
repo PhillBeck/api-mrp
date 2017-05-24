@@ -4,7 +4,8 @@ var mongoose = require('mongoose'),
   Schema = mongoose.Schema,
   mongoosePaginate = require('mongoose-paginate'),
   mongooseAggregatePaginate = require('mongoose-aggregate-paginate'),
-  neomongoose = require('neomongoose');
+  neomongoose = require('neomongoose'),
+  options = require('../config/config').neo4j;
 
 /**
   * @module  Produto
@@ -26,13 +27,6 @@ var ProdutoSchema = new Schema({
 
 ProdutoSchema.plugin(mongoosePaginate);
 ProdutoSchema.plugin(mongooseAggregatePaginate);
-
-var options = {
-  connectURI: 'bolt://localhost',
-  user: 'neo4j',
-  password: 'q1w2e3www'
-}
-
 ProdutoSchema.plugin(neomongoose, options);
 
 var produto = mongoose.model('Produto', ProdutoSchema);

@@ -14,7 +14,7 @@ module.exports = {
     url : 'mongodb://<user>:<password>@<url>'
   },
   neo4j: {
-    url: 'bolt://localhost',
+    connectURI: 'bolt://localhost',
     user: 'neo4j',
     password: 'q1w2e3www'
   }
