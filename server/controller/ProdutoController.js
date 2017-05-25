@@ -210,7 +210,7 @@ exports.getChildren = {
 
 		Produto.getRelationships(searchConfig, function(err, obj) {
 			if (!err) {
-				return reply(obj);
+				return reply(extractTreeData(obj));
 			}
 
 			console.log(err);
@@ -243,3 +243,18 @@ exports.removeChildren = {
 		});
 	}
 };
+
+
+function extractTreeData(obj) {
+
+	var ret = {};
+
+	ret.id = obj._id;
+	ret.text = obj.code + ' - ' + obj.name;
+	ret.data = obj.relationProperties;
+
+	if (obj.relationships) {
+		ret.children = obj.relationships.map(extractTreeData);
+	}
+	return ret;
+}
