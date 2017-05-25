@@ -177,7 +177,7 @@ exports.addChildren = {
 
 		config.node.data.parentNode._id = request.params._parentId;
 		config.node.data.sonNode._id = request.params._childId;
-		config.node.data.relationNode.quantity = request.payload.quantity; 
+		config.node.data.relationNode.quantity = request.payload.quantity;
 
 		Produto.associateNodes(config, function(err, obj) {
 			if(!err) {
@@ -211,13 +211,22 @@ exports.getChildren = {
 		Produto.getRelationships(searchConfig, function(err, obj) {
 			if (!err) {
 				var docs = [];
-
 				docs.push(extractTreeData(obj.docs));
 				return reply(docs);
 			}
 
 			console.log(err);
-			return reply(Boom.badData(JSON.stringify(err)));
+
+			switch(err) {
+				case 'Item not found':
+					return reply(Boom.notFound('Product not found'));
+					break;
+				case 'No Relationships Found':
+					return reply([]);
+					break;
+				default:
+					return reply(Boom.badImplementation());
+			}
 		});
 	}
 };
@@ -242,7 +251,14 @@ exports.removeChildren = {
 			}
 
 			console.log(err);
-			return reply(Boom.badData(JSON.stringify(err)));
+			switch(err.error) {
+				case "Node doesn't exist":
+					return reply(Boom.notFound('Product not Found'));
+					break;
+				default:
+					return reply(Boom.badImplementation());
+
+			}
 		});
 	}
 };
