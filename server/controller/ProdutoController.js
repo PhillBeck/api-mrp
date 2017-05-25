@@ -185,7 +185,7 @@ exports.addChildren = {
 			}
 
 			console.log(err);
-			return reply(Boom.badData(err));
+			return reply(Boom.badData(JSON.stringify(err)));
 		});
 	}
 };
@@ -222,7 +222,11 @@ exports.getChildren = {
 					return reply(Boom.notFound('Product not found'));
 					break;
 				case 'No Relationships Found':
-					return reply([]);
+					Produto.findById(searchConfig.document._id, function(err, doc) {
+						var docs = [];
+						docs.push(extractTreeData(doc));
+						return reply(docs);
+					});
 					break;
 				default:
 					return reply(Boom.badImplementation());
@@ -262,6 +266,27 @@ exports.removeChildren = {
 		});
 	}
 };
+
+
+exports.teste = {
+	handler: function(request, reply) {
+		var searchConfig = {
+			depth: 0,
+			direction: '<',
+			recordsPerPage: 10,
+			page: 0,
+			document : {}
+		};
+
+		searchConfig.document._id = request.params._id;
+
+		Produto.getDependencies(searchConfig, function(err, obj) {
+
+			return reply(obj);
+		})
+
+	}
+}
 
 
 function extractTreeData(obj) {

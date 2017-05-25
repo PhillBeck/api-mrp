@@ -48,5 +48,10 @@ exports.endpoints = [
     method: 'post',
     path: '/necessities',
     config: Necessitiy.create
+  },
+  {
+    method: 'get',
+    path: '/products/test/{_id}',
+    config: Produto.teste
   }
 ];
