@@ -82,7 +82,7 @@ function checkItems(necessity, callback) {
 		}
 
 		if (ids.length == docs.length) {
-			return callback(null);
+			return callback(undefined);
 		}
 
 		let docids = docs.map(a => a._id.toString());

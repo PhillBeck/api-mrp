@@ -210,7 +210,10 @@ exports.getChildren = {
 
 		Produto.getRelationships(searchConfig, function(err, obj) {
 			if (!err) {
-				return reply(extractTreeData(obj));
+				var docs = [];
+
+				docs.push(extractTreeData(obj.docs));
+				return reply(docs);
 			}
 
 			console.log(err);
