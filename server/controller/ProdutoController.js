@@ -179,13 +179,26 @@ exports.addChildren = {
 		config.node.data.sonNode._id = request.params._childId;
 		config.node.data.relationNode.quantity = request.payload.quantity;
 
-		Produto.associateNodes(config, function(err, obj) {
-			if(!err) {
-				return reply().code(204);
+		validateChildren(request.params._parentId, request.params._childId, function(err) {
+			if (err) {
+				return reply(Boom.badData('Circular dependencies'));
 			}
 
-			console.log(err);
-			return reply(Boom.badData(JSON.stringify(err)));
+
+			Produto.associateNodes(config, function(err, obj) {
+				if(!err) {
+					return reply().code(204);
+				}
+
+				console.log(JSON.stringify(err));
+				switch (err.error) {
+					case "Nodes doesn't exist":
+						return reply(Boom.notFound('Product not Found'));
+						break;
+					default:
+						return reply(Boom.badImplementation());
+				}
+			});
 		});
 	}
 };
@@ -268,24 +281,27 @@ exports.removeChildren = {
 };
 
 
-exports.teste = {
-	handler: function(request, reply) {
-		var searchConfig = {
-			depth: 0,
-			direction: '<',
-			recordsPerPage: 10,
-			page: 0,
-			document : {}
-		};
+function validateChildren(parentId, childId, callback) {
+		
+	var searchConfig = {
+		depth: 0,
+		direction: '<',
+		recordsPerPage: 10,
+		page: 0,
+		document : {}
+	};
 
-		searchConfig.document._id = request.params._id;
+	searchConfig.document._id = childId;
 
-		Produto.getDependencies(searchConfig, function(err, obj) {
+	Produto.getDependencies(searchConfig, function(err, obj) {
 
-			return reply(obj);
-		})
-
-	}
+		if (obj.indexOf(parentId) != -1) {
+		    callback(422);
+		}
+		else {
+			callback(undefined)
+		}
+	});
 }
 
 
@@ -302,3 +318,20 @@ function extractTreeData(obj) {
 	}
 	return ret;
 }
+
+exports.test = {
+	validate: {
+		params: {
+			_id: Joi.string().required()
+		}
+	},
+	handler: function(request, reply) {
+		Produto.update({_id: request.params._id}, {$set: request.payload, $inc: {__v: 1}}, function(err) {
+			if (!err) {
+				return reply().code(204);
+			}
+
+			return reply(Boom.badImplementation());
+		})
+	}
+};

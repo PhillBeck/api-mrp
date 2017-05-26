@@ -47,11 +47,16 @@ exports.endpoints = [
   {
     method: 'post',
     path: '/necessities',
-    config: Necessitiy.create
+    config: Necessitiy.createNecessity
   },
   {
     method: 'get',
+    path: '/necessities',
+    config: Necessitiy.getNecessities
+  },
+  {
+    method: 'put',
     path: '/products/test/{_id}',
-    config: Produto.teste
+    config: Produto.test
   }
 ];

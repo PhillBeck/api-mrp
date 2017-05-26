@@ -5,15 +5,9 @@ Boom = require('boom'),
 httpTools = require('./../utils/httpTools'),
 Necessity = require('../model/NecessityModel').Necessity,
 Product = require('../model/ProdutoModel').Produto,
-mongoose = require('mongoose'),
-fs = require('fs'),
-fsExtra = require('fs-extra'),
-uuidV4 = require('uuid/v4'),
-flattenMongooseValidationError = require('flatten-mongoose-validation-error'),
-findRemoveSync = require('find-remove');
+mongoose = require('mongoose');
 
-
-exports.create = {
+exports.createNecessity = {
 	validate: {
 		payload: {
 			description:   Joi.string().required(),
@@ -59,6 +53,55 @@ exports.create = {
 	}
 };
 
+exports.getNecessities = {
+	validate: {
+		query: {
+			_page: Joi.number().integer(),
+			_limit: Joi.number().integer(),
+			_search:  Joi.string()
+		}
+	},
+	handler: function(request, reply) {
+		httpTools.searchQuery(null, request.query, null, function(search, filters) {
+			Necessity.paginate(search, filters, function(err, product) {
+				if (!err) {
+					return reply(product);
+				}
+
+				console.log(err);
+				return reply(Boom.badImplementation(err));
+			});
+		}, function(err) {
+			console.log(err);
+			switch (err.status) {
+				case 400:
+					return reply(Boom.badRequest(err));
+					break;
+				default:
+					return reply(Boom.badImplementation());
+			}
+
+		});
+	}
+};
+
+exports.updateNecessity = {
+	validate: {
+		payload: {
+			description:   Joi.string().required(),
+			items:         Joi.array().items(Joi.object().keys({
+				productId: Joi.string().required(),
+				quantity:  Joi.number().required(),
+				deadline:  Joi.string().required()
+			}))
+		},
+		params: {
+			_id:           Joi.string().required()
+		}
+	},
+
+};
+
 
 function checkItems(necessity, callback) {
 
@@ -73,9 +116,6 @@ function checkItems(necessity, callback) {
 		console.log(e);
 		throw 'Unexpected Error';
 	}
-
-	console.log(ids);
-
 	Product.find({_id: ids}, '_id', function(err, docs) {
 		if (err) {
 			callback({error: 500, message: err});
