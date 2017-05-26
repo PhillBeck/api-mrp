@@ -9,23 +9,24 @@ fs = require('fs'),
 fsExtra = require('fs-extra'),
 uuidV4 = require('uuid/v4'),
 flattenMongooseValidationError = require('flatten-mongoose-validation-error'),
-findRemoveSync = require('find-remove');
+findRemoveSync = require('find-remove'),
+uuidV4 = require('uuid/v4');
 
 function DocNode() {
 	this.node= {
 		data:{
 			nodeData: {},
-			parentNode: {}, 
+			parentNode: {},
 			sonNode: {},
 			relationNode: {}
-		}, 
-		isMultiDelete: false, 
-		direction: '<', 
+		},
+		isMultiDelete: false,
+		direction: '<',
 		relationName: 'COMPOSED_BY',
 		labels:{
-			nodeLabel:'Product', 
-			parentLabel:'Product', 
-			sonLabel:'Product' 
+			nodeLabel:'Product',
+			parentLabel:'Product',
+			sonLabel:'Product'
 		}
 	},
 	this.document= {}
@@ -37,13 +38,13 @@ exports.create = {
 			code:          Joi.string().required(),
 			name:          Joi.string().required(),
 			family:        Joi.string(),
-			productType:   Joi.string(), 
+			productType:   Joi.string(),
 			description:   Joi.string(),
 			amountInStock: Joi.number(),
 			unit:          Joi.string(),
 			leadTime:      Joi.number(),
 			purchasePrice: Joi.number()
-		} 
+		}
 	},
 	handler: function (request, reply) {
 
@@ -53,7 +54,7 @@ exports.create = {
 
 		Produto.insertDocNode(config, function (err, product) {
 			if (!err) {
-				return reply(product).created('/produtos/' + product.cod); 
+				return reply(product).created('/produtos/' + product.cod);
 			}
 			console.log(err)
 			return reply(Boom.badData(err));
@@ -125,7 +126,7 @@ exports.getProducts = {
 			_search:  Joi.string()
 		}
 	},
-	handler: function(request, reply) { 
+	handler: function(request, reply) {
 		httpTools.searchQuery(null, request.query, null, function(search, filters){
 			Produto.paginate(search, filters, function(err, product){
 				if (!err) {
@@ -197,7 +198,7 @@ exports.getChildren = {
 		}
 	},
 	handler: function(request, reply) {
-		
+
 		var searchConfig = {
 			depth: 0,
 			direction: '<',
@@ -293,9 +294,14 @@ function extractTreeData(obj) {
 
 	var ret = {};
 
-	ret.id = obj._id;
+	ret.id = uuidV4();
 	ret.text = obj.code + ' - ' + obj.name;
 	ret.data = obj.relationProperties;
+	if(ret.data !== undefined){
+		ret.data._id = obj._id;
+	}
+
+	console.log(ret.data)
 
 	if (obj.relationships) {
 		ret.children = obj.relationships.map(extractTreeData);
