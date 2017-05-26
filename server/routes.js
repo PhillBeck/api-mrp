@@ -1,6 +1,6 @@
 // Load modules
 var Produto = require('./controller/ProdutoController');
-var Necessitiy = require('./controller/NecessityController');
+var Necessity = require('./controller/NecessityController');
 
 // API Server Endpoints
 exports.endpoints = [
@@ -47,16 +47,21 @@ exports.endpoints = [
   {
     method: 'post',
     path: '/necessities',
-    config: Necessitiy.createNecessity
+    config: Necessity.createNecessity
   },
   {
     method: 'get',
     path: '/necessities',
-    config: Necessitiy.getNecessities
+    config: Necessity.getNecessities
   },
   {
     method: 'put',
-    path: '/products/test/{_id}',
-    config: Produto.test
+    path: '/necessities/{_id}',
+    config: Necessity.updateNecessity
+  },
+  {
+    method: 'get',
+    path: '/necessities/{_id}',
+    config: Necessity.getNecessityById
   }
 ];

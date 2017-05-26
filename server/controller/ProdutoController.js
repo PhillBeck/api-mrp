@@ -9,7 +9,9 @@ fs = require('fs'),
 fsExtra = require('fs-extra'),
 uuidV4 = require('uuid/v4'),
 flattenMongooseValidationError = require('flatten-mongoose-validation-error'),
-findRemoveSync = require('find-remove')
+findRemoveSync = require('find-remove');
+
+Joi.objectId = require('joi-objectid')(Joi);
 
 function DocNode() {
 	this.node= {
@@ -164,7 +166,8 @@ exports.addChildren = {
 			_childId: Joi.string().required()
 		},
 		payload: {
-			quantity: Joi.number().required()
+			quantity: Joi.number().required(),
+			relationshipId: Joi.string()
 		}
 	},
 	handler: function(request, reply) {
@@ -178,6 +181,12 @@ exports.addChildren = {
 		config.node.data.parentNode._id = request.params._parentId;
 		config.node.data.sonNode._id = request.params._childId;
 		config.node.data.relationNode.quantity = request.payload.quantity;
+		if (request.payload.relationshipId) {
+			config.node.data.relationNode.relationshipsId = request.payload.relationshipId;
+		}
+		else {
+			config.node.data.relationNode.relationshipsId = uuidV4();
+		}
 
 		validateChildren(request.params._parentId, request.params._childId, function(err) {
 			if (err) {

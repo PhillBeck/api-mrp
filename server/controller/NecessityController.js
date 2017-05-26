@@ -6,6 +6,8 @@ httpTools = require('./../utils/httpTools'),
 Necessity = require('../model/NecessityModel').Necessity,
 Product = require('../model/ProdutoModel').Produto,
 mongoose = require('mongoose');
+Joi.objectId = require('joi-objectid')(Joi);
+
 
 exports.createNecessity = {
 	validate: {
@@ -20,7 +22,7 @@ exports.createNecessity = {
 	},
 	handler: function(request, reply) {
 
-		checkItems(request.payload, function(e) {
+		checkItems(request.payload.items, function(e) {
 
 			var necessity = new Necessity(request.payload);
 
@@ -88,28 +90,125 @@ exports.getNecessities = {
 exports.updateNecessity = {
 	validate: {
 		payload: {
+			_id:           Joi.string(),
+			__v:           Joi.number(),
+			createdAt:     Joi.string(),
+			updatedAt:     Joi.string(),
 			description:   Joi.string().required(),
 			items:         Joi.array().items(Joi.object().keys({
 				productId: Joi.string().required(),
 				quantity:  Joi.number().required(),
-				deadline:  Joi.string().required()
+				deadline:  Joi.string().required(),
+				_id:       Joi.string()
 			}))
 		},
 		params: {
 			_id:           Joi.string().required()
 		}
 	},
+	handler: function(request, reply) {
+
+		var obj = cleanNecessity(request.payload);
+		var _id = request.params._id;
+
+
+		checkItems(request.payload.items, function(e) {
+			if (!e) {
+
+				Necessity.update({_id: _id}, {$set: obj}, function(err, numAffected) {
+					if (!err) {
+						console.log(numAffected);
+						if (numAffected.nModified != 0) {
+							return reply().code(204);
+						}
+						return reply(Boom.notFound('Necessity Not Found'));
+					}
+
+					console.log(err);
+					switch (err.name) {
+						case 'CastError':
+							return reply(Boom.badRequest('Invalid Id'));
+							break;
+						default:
+							return reply(Boom.badImplementation());
+					}
+				});
+			}
+			else {
+				switch (e.error) {
+					case 400:
+						return reply(Boom.badRequest(e.message));
+						break;
+					case 404:
+						return reply(Boom.notFound(e.message));
+						break;
+					case 422:
+						return reply(Boom.badData(e.message));
+					default:
+						console.log(e);
+						return reply(Boom.badImplementation()); 
+				}
+			}
+		});
+	}
 };
 
+exports.getNecessityById = {
+	validate: {
+		params: {
+			_id: Joi.objectId()
+		}
+	},
+	handler: function(request, reply) {
 
-function checkItems(necessity, callback) {
+		Necessity.findById(request.params._id, function(err, doc) {
+			if (!err) {
+				if(doc) {
+					reply(doc);
+					return
+				}
+				reply(Boom.notFound('Necessity Not Found'));
+				return
+			}
 
-	if (!necessity) {
-		callback({error: 422, message:'Items Array Cannot Be Empty'});
+			console.log(err);
+			return reply(Boom.badImplementation());
+		});
+	}
+};
+
+exports.deleteNecessity = {
+	validate: {
+		params: {
+			_id: Joi.objectId()
+		}
+	},
+	handler: function(request, reply) {
+		Necessity.remove({_id: request.params._id}, function(err, numAffected) {
+			if (!err) {
+				if (numAffected.n != 0) {
+					return reply().code(204);
+				}
+
+				return reply(Boom.notFound('Necessity Not Found'));
+			}
+
+			console.log(err);
+			return reply(Boom.badImplementation());
+		});
+	}
+}
+
+function checkItems(items, callback) {
+
+	if (!items) {
+		return callback(undefined);
 	}
 
+	console.log(items);
+
 	try {
-		var ids = necessity.items.map(a => a.productId).filter(onlyUnique);
+		var ids = items.map(a => a.productId).filter(onlyUnique);
 	}
 	catch (e) {
 		console.log(e);
@@ -132,5 +231,19 @@ function checkItems(necessity, callback) {
 }
 
 function onlyUnique(value, index, self) { 
-    return self.indexOf(value) === index;
+	return self.indexOf(value) === index;
+}
+
+function cleanNecessity(obj) {
+
+	delete obj._id;
+	delete obj.__v;
+	delete obj.createdAt;
+	delete obj.updatedAt;
+
+	if (obj.items) {
+		obj.items.forEach(a => {delete a._id;})
+	}
+
+	return obj;
 }
