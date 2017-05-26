@@ -259,8 +259,8 @@ exports.removeChildren = {
 	handler: function(request, reply) {
 
 		var config = new DocNode();
-		config.node.data.parentNode._id = _parentId;
-		config.node.data.sonNode._id = _childId;
+		config.node.data.parentNode._id = request.params._parentId;
+		config.node.data.sonNode._id = request.params._childId;
 
 		Produto.disassociate(config, function(err, obj) {
 			if (!err) {
@@ -312,9 +312,11 @@ function extractTreeData(obj) {
 	ret.id = uuidV4();
 	ret.text = obj.code + ' - ' + obj.name;
 	ret.data = obj.relationProperties;
-	if(ret.data !== undefined){
-		ret.data._id = obj._id;
+	if(ret.data == undefined){
+		ret.data = {};
 	}
+
+	ret.data._id = obj._id;
 
 	console.log(ret.data)
 
