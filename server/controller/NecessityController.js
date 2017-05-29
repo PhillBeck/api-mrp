@@ -233,6 +233,31 @@ exports.addItem = {
 	}
 };
 
+exports.removeItem = {
+	validate : {
+		params: {
+			necessityId: Joi.objectId().required(),
+			itemId: Joi.objectId().required()
+		}
+	},
+	handler: function(request, reply) {
+
+		console.log(request.i18n.getLocale());
+		Necessity.findById(request.params.necessityId, function(err, doc) {
+			if (!err) {
+				if (doc) {
+					return reply('ok');
+				}
+				return reply(Boom.notFound(request.i18n.__("necessity.notFound")));
+			}
+
+			console.log(err);
+			return reply(Boom.badImplementation());
+
+		});
+	}
+};
+
 function checkItems(items, callback) {
 
 	if (!items) {

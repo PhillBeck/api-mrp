@@ -155,13 +155,13 @@ exports.getProducts = {
 exports.getProductById = {
 	validate: {
 		params: {
-			_id: Joi.string().required()
+			_id: Joi.objectId().required()
 		}
 	},
 	handler: function(request, reply) {
 		Produto.findById(request.params._id, function(err, doc) {
 			if (err) {
-				return reply(Boom.badData('Product not found'));
+				return reply(Boom.notFound(request.i18n.__("product.notFound")));
 			}
 			return reply(doc);
 		});

@@ -4,5 +4,5 @@
 	"Joi.ObjectId.validationError": "Não é um ObjectId válido.",
 	"product.notFound": "Produto não encontrado.",
 	"necessity.notFound": "Necessidade não encontrada.",
-	"necessity.productNotFound": "Produto não encontrado.",
+	"necessity.productNotFound": "Produto não encontrado."
 }

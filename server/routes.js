@@ -73,5 +73,10 @@ exports.endpoints = [
     method: 'post',
     path: '/necessities/{_id}/items',
     config: Necessity.addItem
+  },
+  {
+    method: 'delete',
+    path: '/necessities/{necessityId}/items/{itemId}',
+    config: Necessity.removeItem
   }
 ];
