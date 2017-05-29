@@ -197,7 +197,9 @@ exports.deleteNecessity = {
 			return reply(Boom.badImplementation());
 		});
 	}
-}
+};
+
+exports.
 
 function checkItems(items, callback) {
 

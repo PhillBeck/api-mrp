@@ -182,7 +182,7 @@ exports.addChildren = {
 		config.node.data.sonNode._id = request.params._childId;
 		config.node.data.relationNode.quantity = request.payload.quantity;
 		if (request.payload.relationshipId) {
-			config.node.data.relationNode.relationshipsId = request.payload.relationshipId;
+			config.node.data.relationNode.relationshipId = request.payload.relationshipId;
 		}
 		else {
 			config.node.data.relationNode.relationshipsId = uuidV4();
