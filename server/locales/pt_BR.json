@@ -1,0 +1,8 @@
+{
+	"httpUtils.badQuery": "Pesquisa ou filtros com erros.",
+	"necessity.items.productNotFoundList": "Não foi possível encontrar: ",
+	"Joi.ObjectId.validationError": "Não é um ObjectId válido.",
+	"product.notFound": "Produto não encontrado.",
+	"necessity.notFound": "Necessidade não encontrada.",
+	"necessity.productNotFound": "Produto não encontrado.",
+}

@@ -12,14 +12,31 @@ server.connection({ port: app.config.server.port });
 
 server.route(Routes.endpoints);
 
-server.register({
+var plugins = [
+  {
+    register: require('hapi-locale'),
+    options: {
+      scan: {
+        path: __dirname + "/locales"
+      },
+      order: ['headers'],
+      header: 'accept-language'
+    }
+  },
+  {
+    register: require('joi18n')
+  },
+  {
    register: require( "hapi-i18n" ),
     options: {
-      locales: ["pt", "en", "es"],
+      locales: ["pt_BR", "en_US"],
       directory: __dirname + "/locales",
-      languageHeaderField: "language"
+      languageHeaderField: "accept-language"
     }
-  }, function ( err ){
+  }
+];
+
+server.register(plugins, function ( err ){
     if ( err ){
       console.log( err );
     }

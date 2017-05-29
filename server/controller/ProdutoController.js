@@ -58,7 +58,7 @@ exports.create = {
 				return reply(product).created('/produtos/' + product.cod);
 			}
 			console.log(err)
-			return reply(Boom.badData(err));
+			return reply(Boom.badImplementation());
 		});
 	}
 };
@@ -66,7 +66,7 @@ exports.create = {
 exports.remove = {
 	validate: {
 		params : {
-			_id: Joi.string().required()
+			_id: Joi.objectId().required()
 		}
 	},
 	handler: function(request, reply) {
@@ -79,7 +79,15 @@ exports.remove = {
 			if (!err) {
 				return reply().code(204);
 			}
-			return reply(Boom.badData(JSON.stringify(err)));
+
+			console.log(err);
+			switch (err.error) {
+				case 'Not Found':
+					return reply(Boom.notFound(request.i18n.__("product.notFound")));
+					break;
+				default:
+					return reply(Boom.badImplementation);
+			}
 		})
 	}
 };
@@ -113,7 +121,7 @@ exports.update = {
 			}
 
 			console.log(err);
-			return reply(Boom.badData(err));
+			return reply(Boom.badImplementation());
 		});
 
 	}
@@ -139,7 +147,7 @@ exports.getProducts = {
 
 			});
 		}, function(err) {
-			reply(Boom.BadData(err));
+			reply(Boom.badRequest(request.i18n.__( "http.badQuery" )));
 		});
 	}
 };
@@ -158,7 +166,6 @@ exports.getProductById = {
 			return reply(doc);
 		});
 	}
-
 };
 
 exports.addChildren = {
@@ -259,7 +266,6 @@ exports.getChildren = {
 	}
 };
 
-
 exports.removeChildren = {
 	validate: {
 		params: {
@@ -291,7 +297,6 @@ exports.removeChildren = {
 	}
 };
 
-
 function validateChildren(parentId, childId, callback) {
 
 	var searchConfig = {
@@ -314,7 +319,6 @@ function validateChildren(parentId, childId, callback) {
 		}
 	});
 }
-
 
 function extractTreeData(obj) {
 

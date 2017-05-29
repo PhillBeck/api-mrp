@@ -14,9 +14,9 @@ exports.createNecessity = {
 		payload: {
 			description:   Joi.string().required(),
 			items:         Joi.array().items(Joi.object().keys({
-				productId: Joi.string().required(),
+				productId: Joi.objectId().required(),
 				quantity:  Joi.number().required(),
-				deadline:  Joi.string().required()
+				deadline:  Joi.date().iso().required()
 			}))
 		}
 	},
@@ -38,14 +38,9 @@ exports.createNecessity = {
 			}
 			else {
 				switch (e.error) {
-					case 400:
-						return reply(Boom.badRequest(e.message));
-						break;
 					case 404:
-						return reply(Boom.notFound(e.message));
+						return reply(Boom.notFound(request.i18n.__( "necessity.productNotFoundList" ) + e.message));
 						break;
-					case 422:
-						return reply(Boom.badData(e.message));
 					default:
 						console.log(e);
 						return reply(Boom.badImplementation());
@@ -77,12 +72,11 @@ exports.getNecessities = {
 			console.log(err);
 			switch (err.status) {
 				case 400:
-					return reply(Boom.badRequest(err));
+					return reply(Boom.badRequest(request.i18n.__("http.badQuery")));
 					break;
 				default:
 					return reply(Boom.badImplementation());
 			}
-
 		});
 	}
 };
@@ -90,7 +84,7 @@ exports.getNecessities = {
 exports.updateNecessity = {
 	validate: {
 		payload: {
-			_id:           Joi.string(),
+			_id:           Joi.objectId(),
 			__v:           Joi.number(),
 			createdAt:     Joi.string(),
 			updatedAt:     Joi.string(),
@@ -98,12 +92,12 @@ exports.updateNecessity = {
 			items:         Joi.array().items(Joi.object().keys({
 				productId: Joi.string().required(),
 				quantity:  Joi.number().required(),
-				deadline:  Joi.string().required(),
-				_id:       Joi.string()
+				deadline:  Joi.date().iso().required(),
+				_id:       Joi.objectId().required()
 			}))
 		},
 		params: {
-			_id:           Joi.string().required()
+			_id:           Joi.objectId().required()
 		}
 	},
 	handler: function(request, reply) {
@@ -117,33 +111,21 @@ exports.updateNecessity = {
 
 				Necessity.update({_id: _id}, {$set: obj}, function(err, numAffected) {
 					if (!err) {
-						console.log(numAffected);
 						if (numAffected.nModified != 0) {
 							return reply().code(204);
 						}
-						return reply(Boom.notFound('Necessity Not Found'));
+						return reply(Boom.notFound(request.i18n.__("necessity.notFound")));
 					}
 
 					console.log(err);
-					switch (err.name) {
-						case 'CastError':
-							return reply(Boom.badRequest('Invalid Id'));
-							break;
-						default:
-							return reply(Boom.badImplementation());
-					}
+					return reply(Boom.badImplementation());
 				});
 			}
 			else {
 				switch (e.error) {
-					case 400:
-						return reply(Boom.badRequest(e.message));
-						break;
 					case 404:
-						return reply(Boom.notFound(e.message));
+						return reply(Boom.notFound(request.i18n.__("necessity.productNotFoundList") + e.message));
 						break;
-					case 422:
-						return reply(Boom.badData(e.message));
 					default:
 						console.log(e);
 						return reply(Boom.badImplementation()); 
@@ -156,7 +138,7 @@ exports.updateNecessity = {
 exports.getNecessityById = {
 	validate: {
 		params: {
-			_id: Joi.objectId()
+			_id: Joi.objectId().required()
 		}
 	},
 	handler: function(request, reply) {
@@ -167,7 +149,7 @@ exports.getNecessityById = {
 					reply(doc);
 					return
 				}
-				reply(Boom.notFound('Necessity Not Found'));
+				reply(Boom.notFound(request.i18n.__("necessity.notFound")));
 				return
 			}
 
@@ -184,13 +166,13 @@ exports.deleteNecessity = {
 		}
 	},
 	handler: function(request, reply) {
-		Necessity.remove({_id: request.params._id}, function(err, numAffected) {
+		Necessity.remove({_id: request.params._id}, function(err, obj) {
 			if (!err) {
-				if (numAffected.n != 0) {
+				if (obj.result.n != 0) {
 					return reply().code(204);
 				}
 
-				return reply(Boom.notFound('Necessity Not Found'));
+				return reply(Boom.notFound(request.i18n.__("necessity.notFound")));
 			}
 
 			console.log(err);
@@ -199,15 +181,63 @@ exports.deleteNecessity = {
 	}
 };
 
-exports.
+exports.addItem = {
+	validate: {
+		payload: {
+			productId: Joi.objectId().required(),
+			quantity: Joi.number().required(),
+			deadline: Joi.date().iso()
+		},
+		params: {
+			_id: Joi.objectId().required()
+		}
+	},
+	handler: function(request, reply) {
+		
+		Product.count({ _id: request.payload.productId }, function(err, count) {
+			if (!err) {
+				if (count > 0) {
+					Necessity.findById(request.params._id, function(e, doc) {
+						if (!err) {
+							if(doc) {
+								doc.items.push(request.payload);
+
+								var item = doc.items[doc.items.length -1];
+								doc.save(function(error) {
+									if (error) {
+										console.log(error);
+										return reply(Boom.badImplementation());
+									}
+									return reply(item);
+								});
+							}
+							else {
+								return reply(Boom.notFound(request.i18n.__("necessity.notFound")));
+							}
+						}
+						else {
+							console.log(e);
+							return reply(Boom.badImplementation());
+						}
+					});
+				}
+				else {
+					return reply(Boom.notFound(request.i18n.__("necessity.productNotFound")));
+				}
+			}
+			else {
+				console.log(err);
+				return reply(Boom.badImplementation());
+			}
+		});
+	}
+};
 
 function checkItems(items, callback) {
 
 	if (!items) {
 		return callback(undefined);
 	}
-
-	console.log(items);
 
 	try {
 		var ids = items.map(a => a.productId).filter(onlyUnique);
@@ -228,7 +258,7 @@ function checkItems(items, callback) {
 		let docids = docs.map(a => a._id.toString());
 		let difference = ids.filter(x => docids.indexOf(x) == -1);
 
-		callback({error: 404, message: 'Could not find products ' + difference.toString()});
+		callback({error: 404, message: difference.toString()});
 	});
 }
 

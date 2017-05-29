@@ -63,5 +63,15 @@ exports.endpoints = [
     method: 'get',
     path: '/necessities/{_id}',
     config: Necessity.getNecessityById
+  },
+  {
+    method: 'delete',
+    path: '/necessities/{_id}',
+    config: Necessity.deleteNecessity
+  },
+  {
+    method: 'post',
+    path: '/necessities/{_id}/items',
+    config: Necessity.addItem
   }
 ];
