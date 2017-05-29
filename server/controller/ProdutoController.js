@@ -130,9 +130,11 @@ exports.getProducts = {
 	handler: function(request, reply) {
 		httpTools.searchQuery(null, request.query, null, function(search, filters){
 			Produto.paginate(search, filters, function(err, product){
+				console.log(request.i18n.__( "teste" ))
 				if (!err) {
 					return reply(product);
 				}
+
 				return reply(Boom.badImplementation(err));
 
 			});
@@ -291,7 +293,7 @@ exports.removeChildren = {
 
 
 function validateChildren(parentId, childId, callback) {
-		
+
 	var searchConfig = {
 		depth: 0,
 		direction: '<',
@@ -351,4 +353,3 @@ exports.test = {
 		})
 	}
 };
-
