@@ -12,6 +12,7 @@ Joi.objectId = require('joi-objectid')(Joi);
 exports.createNecessity = {
 	validate: {
 		payload: {
+			name:          Joi.string().required(),
 			description:   Joi.string().required(),
 			items:         Joi.array().items(Joi.object().keys({
 				productId: Joi.objectId().required(),
@@ -86,6 +87,7 @@ exports.updateNecessity = {
 		payload: {
 			_id:           Joi.objectId(),
 			__v:           Joi.number(),
+			name:          Joi.string().required(),
 			createdAt:     Joi.string(),
 			updatedAt:     Joi.string(),
 			description:   Joi.string().required(),
@@ -241,19 +243,76 @@ exports.removeItem = {
 		}
 	},
 	handler: function(request, reply) {
-
-		console.log(request.i18n.getLocale());
 		Necessity.findById(request.params.necessityId, function(err, doc) {
 			if (!err) {
 				if (doc) {
-					return reply('ok');
+					try {
+						item = doc.items.id(request.params.itemId).remove();
+
+						doc.save(function(e) {
+							if (!e) {
+								return reply().code(204);
+							}
+							return reply(Boom.badImplementation());
+						});
+					}
+					catch (e) {
+						console.log(e);
+						return reply().code(204);
+					}
 				}
 				return reply(Boom.notFound(request.i18n.__("necessity.notFound")));
 			}
-
 			console.log(err);
 			return reply(Boom.badImplementation());
+		});
+	}
+};
 
+exports.updateItem = {
+	validate: {
+		params: {
+			necessityId: Joi.objectId().required(),
+			itemId: Joi.objectId().required()
+		},
+		payload: {
+			productId: Joi.objectId().required(),
+			quantity: Joi.number().required(),
+			deadline: Joi.date().iso()
+		}
+	},
+	handler: function(request, reply) {
+		Necessity.findById(request.params.necessityId, function(err, doc) {
+			if (!err) {
+				if (doc) {
+
+					var item = doc.items.id(request.params.itemId);
+
+					if (item) {
+						item = request.payload;
+						doc.save(function(e) {
+
+							if (!e) {
+								return reply().code(204);	
+							}
+							else {
+								console.log(e);
+								return reply(Boom.badImplementation());
+							}
+						});
+					}
+					else {
+						return reply(Boom.notFound(request.i18n.__("necessity.items.notFound")));
+					}
+				}
+				else {
+					return reply(Boom.notFound(request.i18n.__("necessity.notFound")));
+				}
+			}
+			else {
+				console.log(err);
+				return reply(Boom.badImplementation());
+			}
 		});
 	}
 };

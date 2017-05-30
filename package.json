@@ -19,6 +19,7 @@
     "joi": "*",
     "joi-objectid": "^2.0.0",
     "joi18n": "0.0.18",
+    "lodash": "^4.17.4",
     "mongoose": "*",
     "mongoose-aggregate-paginate": "^1.0.5",
     "mongoose-paginate": "^5.0.3",

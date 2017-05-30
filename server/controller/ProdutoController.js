@@ -5,13 +5,11 @@ Boom = require('boom'),
 httpTools = require('./../utils/httpTools'),
 Produto = require('../model/ProdutoModel').Produto,
 mongoose = require('mongoose'),
-fs = require('fs'),
-fsExtra = require('fs-extra'),
 uuidV4 = require('uuid/v4'),
-flattenMongooseValidationError = require('flatten-mongoose-validation-error'),
-findRemoveSync = require('find-remove');
+_ = require('lodash');
 
 Joi.objectId = require('joi-objectid')(Joi);
+
 
 function DocNode() {
 	this.node= {
@@ -39,7 +37,7 @@ exports.create = {
 			code:          Joi.string().required(),
 			name:          Joi.string().required(),
 			family:        Joi.string(),
-			productType:   Joi.string(),
+			productType:   Joi.number(),
 			description:   Joi.string(),
 			amountInStock: Joi.number(),
 			unit:          Joi.string(),
@@ -49,13 +47,17 @@ exports.create = {
 	},
 	handler: function (request, reply) {
 
+		if (!isValidProductType(request.payload)) {
+			return reply(Boom.badData(request.i18n.__("product.invalidProductType")));
+		}
+
 		var config = new DocNode();
 
 		config.document = request.payload;
 
 		Produto.insertDocNode(config, function (err, product) {
 			if (!err) {
-				return reply(product).created('/produtos/' + product.cod);
+				return reply(product).created('/products/' + product._id);
 			}
 			console.log(err)
 			return reply(Boom.badImplementation());
@@ -98,7 +100,7 @@ exports.update = {
 			code:          Joi.string().required(),
 			name:          Joi.string().required(),
 			family:        Joi.string(),
-			productType:   Joi.string(),
+			productType:   Joi.number(),
 			description:   Joi.string(),
 			amountInStock: Joi.number(),
 			unit:          Joi.string(),
@@ -106,10 +108,15 @@ exports.update = {
 			purchasePrice: Joi.number()
 		},
 		params: {
-			_id:  		   Joi.string().required()
+			_id:  		   Joi.objectId().required()
 		}
 	},
 	handler: function (request, reply) {
+
+		if (!isValidProductType(request.payload)) {
+			return reply(Boom.badData(request.i18n.__("product.invalidProductType")));
+		}
+
 		var config = new DocNode();
 
 		config.document = request.payload;
@@ -138,9 +145,14 @@ exports.getProducts = {
 	handler: function(request, reply) {
 		httpTools.searchQuery(null, request.query, null, function(search, filters){
 			Produto.paginate(search, filters, function(err, product){
-				console.log(request.i18n.__( "teste" ))
 				if (!err) {
-					return reply(product);
+					try {
+						return reply(localize(product, request.i18n.getLocale()));
+					}
+					catch (e) {
+						console.log(e);
+						return reply(Boom.badImplementation());
+					}
 				}
 
 				return reply(Boom.badImplementation(err));
@@ -163,7 +175,15 @@ exports.getProductById = {
 			if (err) {
 				return reply(Boom.notFound(request.i18n.__("product.notFound")));
 			}
-			return reply(doc);
+			try {
+				var ret = localize(doc, request.i18n.getLocale());
+			}
+			catch (e) {
+				console.log(e);
+			}
+
+			return reply(ret);
+			
 		});
 	}
 };
@@ -333,27 +353,82 @@ function extractTreeData(obj) {
 
 	ret.data._id = obj._id;
 
-	console.log(ret.data)
-
 	if (obj.relationships) {
 		ret.children = obj.relationships.map(extractTreeData);
 	}
 	return ret;
 }
 
-exports.test = {
-	validate: {
-		params: {
-			_id: Joi.string().required()
-		}
-	},
-	handler: function(request, reply) {
-		Produto.update({_id: request.params._id}, {$set: request.payload, $inc: {__v: 1}}, function(err) {
-			if (!err) {
-				return reply().code(204);
-			}
+function localize(docs, locale) {
 
-			return reply(Boom.badImplementation());
-		})
+	if (docs.docs instanceof Array) {
+		var ret = docs.docs.map(a => {
+			try {
+				let aux = shallowClone(a);
+				aux.productType = localizeProductType(a, locale);
+				return aux;
+			}
+			catch (e) {
+				console.log(e);
+				return a
+			}
+		});
 	}
-};
+	else {
+		try {
+			var ret = shallowClone(docs);
+			ret.productType = localizeProductType(docs, locale);
+		}
+		catch (e) {
+			console.log(e);
+			return docs;
+		}
+	}
+
+	return ret;
+}
+
+function localizeProductType(doc, locale) {
+
+	var productTypes = [
+		{type: 1, locales: [{locale: 'en_US', text: 'Bought'}, {locale:'pt_BR', text: 'Comprado'}]},
+		{type: 2, locales: [{locale: 'en_US', text: 'Manufactured'}, {locale:'pt_BR', text: 'Fabricado'}]}
+	];
+
+	var i = arrayObjectIndexOf(productTypes, doc.productType, 'type');
+
+	if (i != -1) {
+		var j = arrayObjectIndexOf(productTypes[i].locales, locale, 'locale');
+		var j = j == -1 ? 0 : j;
+
+		return productTypes[i].locales[j].text;
+	}	
+	throw 'Invalid ProductType code'; 
+}
+
+function arrayObjectIndexOf(myArray, searchTerm, property) {
+	for(var i = 0, len = myArray.length; i < len; i++) {
+		if (myArray[i][property] == searchTerm) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+function shallowClone(obj) {
+	if (null == obj || "object" != typeof obj) {
+		return obj;
+	}
+
+	var ret = {};
+
+	Object.keys(obj._doc).forEach(key =>{
+		ret[key] = obj._doc[key];
+	})
+
+	return ret;
+}
+
+function isValidProductType(data) {
+	return _.includes([1,2], data.productType);
+}

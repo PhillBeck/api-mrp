@@ -13,6 +13,7 @@ var NecessityItemSchema = new Schema({
 });
 
 var NecessitySchema = new Schema({
+	name: {type: String, required: true},
 	description: {type: String, required: true},
 	items: [NecessityItemSchema]
 }, {timestamps: true});
