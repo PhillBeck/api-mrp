@@ -1,7 +1,7 @@
 'use strict';
 
 var Mongoose = require('mongoose'),
-  config = require('./config');
+	config = require('./config');
 
 //Mongoose.connect(config.database.url);
 Mongoose.connect('mongodb://' + config.database.host + '/' + config.database.db);  

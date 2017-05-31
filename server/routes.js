@@ -83,5 +83,10 @@ exports.endpoints = [
     method: 'put',
     path: '/necessities/{necessityId}/items/{itemId}',
     config: Necessity.updateItem
+  },
+  {
+    method: 'get',
+    path: '/necessities/{necessityId}/materials',
+    config: Necessity.getMaterials
   }
 ];

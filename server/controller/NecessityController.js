@@ -1,11 +1,12 @@
 'use strict';
 
 var Joi = require('joi'),
-Boom = require('boom'),
-httpTools = require('./../utils/httpTools'),
-Necessity = require('../model/NecessityModel').Necessity,
-Product = require('../model/ProdutoModel').Produto,
-mongoose = require('mongoose');
+	Boom = require('boom'),
+	httpTools = require('./../utils/httpTools'),
+	Necessity = require('../model/NecessityModel').Necessity,
+	Product = require('../model/ProdutoModel').Produto,
+	async = require('async'),
+	mongoose = require('mongoose');
 Joi.objectId = require('joi-objectid')(Joi);
 
 
@@ -13,12 +14,7 @@ exports.createNecessity = {
 	validate: {
 		payload: {
 			name:          Joi.string().required(),
-			description:   Joi.string().required(),
-			items:         Joi.array().items(Joi.object().keys({
-				productId: Joi.objectId().required(),
-				quantity:  Joi.number().required(),
-				deadline:  Joi.date().iso().required()
-			}))
+			description:   Joi.string().required()
 		}
 	},
 	handler: function(request, reply) {
@@ -61,6 +57,7 @@ exports.getNecessities = {
 	},
 	handler: function(request, reply) {
 		httpTools.searchQuery(null, request.query, null, function(search, filters) {
+			filters.populate = {path: 'items.productId'};
 			Necessity.paginate(search, filters, function(err, product) {
 				if (!err) {
 					return reply(product);
@@ -90,13 +87,7 @@ exports.updateNecessity = {
 			name:          Joi.string().required(),
 			createdAt:     Joi.string(),
 			updatedAt:     Joi.string(),
-			description:   Joi.string().required(),
-			items:         Joi.array().items(Joi.object().keys({
-				productId: Joi.string().required(),
-				quantity:  Joi.number().required(),
-				deadline:  Joi.date().iso().required(),
-				_id:       Joi.objectId().required()
-			}))
+			description:   Joi.string().required()
 		},
 		params: {
 			_id:           Joi.objectId().required()
@@ -145,7 +136,7 @@ exports.getNecessityById = {
 	},
 	handler: function(request, reply) {
 
-		Necessity.findById(request.params._id, function(err, doc) {
+		Necessity.findById(request.params._id).populate({path: 'items.productId'}).exec(function(err, doc) {
 			if (!err) {
 				if(doc) {
 					reply(doc);
@@ -316,6 +307,63 @@ exports.updateItem = {
 		});
 	}
 };
+
+exports.getMaterials = {
+	validate: {
+		params: {
+			necessityId: Joi.objectId().required()
+		}
+	},
+	handler: function(request, reply) {
+
+		Necessity.findById(request.params.necessityId, function(err, doc) {
+			if (!err) {
+				if (doc) {
+						calculateMaterials(doc, reply);
+				}
+				else {
+					return reply(Boom.notFound(request.i18n.__("necessity.notFound")));
+				}
+			}
+			else {
+				console.log(err);
+				return reply(Boom.badImplementation());
+			}
+		});
+	}
+};
+
+function calculateMaterials(necessity, reply) {
+	if (!necessity.items || !(necessity.items.length > 0)) {
+		done(new Error('Empty items list'));
+	}
+
+	async.map(necessity.items, function(item, done) {
+
+		var searchConfig = {
+			depth: 0,
+			direction: '<',
+			recordsPerPage: 10,
+			page: 0,
+			document : {}
+		};
+
+		searchConfig.document._id = item.productId;
+
+		Product.getRelationships(searchConfig, function(err, obj) {
+			if (!err) {
+				done(undefined,obj);
+				return
+			}
+			done();
+			return;
+		});
+	}, function(err, results) {
+		console.log(err);
+		console.log(results);
+		return reply('ok');
+	});
+}
 
 function checkItems(items, callback) {
 
