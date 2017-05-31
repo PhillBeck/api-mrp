@@ -58,6 +58,7 @@ exports.getNecessities = {
 	handler: function(request, reply) {
 		httpTools.searchQuery(null, request.query, null, function(search, filters) {
 			filters.populate = {path: 'items.productId'};
+			filters.select = '-items';
 			Necessity.paginate(search, filters, function(err, product) {
 				if (!err) {
 					return reply(product);
@@ -132,23 +133,53 @@ exports.getNecessityById = {
 	validate: {
 		params: {
 			_id: Joi.objectId().required()
+		},
+		query: {
+			_page: Joi.number(),
+			_limit: Joi.number()
 		}
 	},
 	handler: function(request, reply) {
 
-		Necessity.findById(request.params._id).populate({path: 'items.productId'}).exec(function(err, doc) {
-			if (!err) {
-				if(doc) {
-					reply(doc);
-					return
-				}
-				reply(Boom.notFound(request.i18n.__("necessity.notFound")));
-				return
-			}
+		var options = {};
+		options.page = request.query._page === undefined ? 1 : request.query._page;
+		options.limit = request.query._limit === undefined ? 10 : request.query._limit;
+		options.skip = options.limit * (options.page - 1);
 
-			console.log(err);
-			return reply(Boom.badImplementation());
-		});
+		console.log(request.i18n.getLocale());
+
+		if (options.page === 0 || options.limit === 0) {
+			return reply(Boom.badRequest(request.i18n.__("httpUtils.badQuery")));
+		}
+
+		Necessity.aggregate([
+			{$match: {_id: mongoose.Types.ObjectId(request.params._id)}},
+			{$project: {
+				_id: 1,
+				items: 1,
+				total: {$size: "$items"}
+			}},
+			{$unwind: "$items"},
+			{$skip: options.skip},
+			{$limit: options.limit},
+			{$group: {
+				_id: "$_id",
+				items: {$push: "$items"},
+				total: {$first: "$total"},
+			}},
+			{$addFields: {
+				page: options.page,
+				pages: {$ceil: {$divide: ["$total", options.limit]}},
+				limit: options.limit
+			}},
+			{$project: {_id: 0}}],
+			function(err, doc) {
+				if (!err) {
+					return reply(doc);
+				}
+				console.log(err);
+				return reply(Boom.badImplementation());
+			});
 	}
 };
 
@@ -380,7 +411,9 @@ function prepareMaterialsArray(product, currentQuantity, array) {
 
 	array.push(obj);
 
-	product.relationships.forEach(a => {prepareMaterialsArray(a, currentQuantity, array)});
+	if (product.relationships instanceof Array) {
+		product.relationships.forEach(a => {prepareMaterialsArray(a, currentQuantity, array)});
+	}
 }
 
 function checkItems(items, callback) {

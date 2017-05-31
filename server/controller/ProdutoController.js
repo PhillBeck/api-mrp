@@ -252,7 +252,7 @@ exports.getChildren = {
 		var searchConfig = {
 			depth: 0,
 			direction: '<',
-			recordsPerPage: 2,
+			recordsPerPage: 10,
 			page: 0,
 			document : {}
 		};
@@ -378,7 +378,7 @@ function localize(docs, locale) {
 		}
 		else {
 			try {
-				
+
 				ret.productType = localizeProductType(docs, locale);
 			}
 			catch (e) {
