@@ -361,32 +361,38 @@ function extractTreeData(obj) {
 
 function localize(docs, locale) {
 
-	if (docs.docs instanceof Array) {
-		var ret = docs.docs.map(a => {
+	try {
+		var ret = shallowClone(docs);
+		if (docs.docs instanceof Array) {
+			ret.docs = docs.docs.map(a => {
+				try {
+					let aux = shallowClone(a);
+					aux.productType = localizeProductType(a, locale);
+					return aux;
+				}
+				catch (e) {
+					console.log(e);
+					return a
+				}
+			});
+		}
+		else {
 			try {
-				let aux = shallowClone(a);
-				aux.productType = localizeProductType(a, locale);
-				return aux;
+				
+				ret.productType = localizeProductType(docs, locale);
 			}
 			catch (e) {
 				console.log(e);
-				return a
+				return docs;
 			}
-		});
-	}
-	else {
-		try {
-			var ret = shallowClone(docs);
-			ret.productType = localizeProductType(docs, locale);
 		}
-		catch (e) {
-			console.log(e);
-			return docs;
-		}
+		return ret;
 	}
-
-	return ret;
+	catch (err) {
+		return docs;
+	}
 }
+
 
 function localizeProductType(doc, locale) {
 
@@ -422,9 +428,17 @@ function shallowClone(obj) {
 
 	var ret = {};
 
-	Object.keys(obj._doc).forEach(key =>{
-		ret[key] = obj._doc[key];
-	})
+	try {
+		Object.keys(obj._doc).forEach(key =>{
+			ret[key] = obj._doc[key];
+		});
+	}
+	catch (e)
+	{
+		Object.keys(obj).forEach(key => {
+			ret[key] = obj[key]
+		});
+	}
 
 	return ret;
 }

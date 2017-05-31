@@ -352,17 +352,35 @@ function calculateMaterials(necessity, reply) {
 
 		Product.getRelationships(searchConfig, function(err, obj) {
 			if (!err) {
-				done(undefined,obj);
+
+				var ret = [];
+				prepareMaterialsArray(obj.docs, 1, ret);
+				done(undefined,ret);
 				return
 			}
 			done();
 			return;
 		});
 	}, function(err, results) {
-		console.log(err);
-		console.log(results);
-		return reply('ok');
+		return reply(results);
 	});
+}
+
+function prepareMaterialsArray(product, currentQuantity, array) { 
+
+	currentQuantity = currentQuantity === undefined ? 1 : currentQuantity;
+	var obj = {id: product._id};
+
+	if (product.relationProperties) {
+		let quantity = product.relationProperties.quantity === undefined ? 1 : product.relationProperties.quantity
+		currentQuantity = currentQuantity * product.relationProperties.quantity;
+	}
+
+	obj.quantity = currentQuantity;
+
+	array.push(obj);
+
+	product.relationships.forEach(a => {prepareMaterialsArray(a, currentQuantity, array)});
 }
 
 function checkItems(items, callback) {
