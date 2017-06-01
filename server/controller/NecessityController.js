@@ -132,7 +132,29 @@ exports.updateNecessity = {
 exports.getNecessityById = {
 	validate: {
 		params: {
-			_id: Joi.objectId().required()
+			necessityId: Joi.objectId().required()
+		}
+	},
+	handler: function(request, reply) {
+		Necessity.findById(request.params.necessityId).select('-items -__v').exec(function(err, doc) {
+			if (!err) {
+				if (doc) {
+					return reply(doc);
+				}
+
+				return reply(Boom.notFound(request.i18n.__("request.notFound")));
+			}
+
+			console.log(err);
+			return reply(Boom.badImplementation());
+		})
+	}
+};
+
+exports.getItemsByNecessityId = {
+	validate: {
+		params: {
+			necessityId: Joi.objectId().required()
 		},
 		query: {
 			_page: Joi.number(),
@@ -145,15 +167,13 @@ exports.getNecessityById = {
 		options.page = request.query._page === undefined ? 1 : request.query._page;
 		options.limit = request.query._limit === undefined ? 10 : request.query._limit;
 		options.skip = options.limit * (options.page - 1);
-
-		console.log(request.i18n.getLocale());
-
+		
 		if (options.page === 0 || options.limit === 0) {
 			return reply(Boom.badRequest(request.i18n.__("httpUtils.badQuery")));
 		}
 
 		Necessity.aggregate([
-			{$match: {_id: mongoose.Types.ObjectId(request.params._id)}},
+			{$match: {_id: mongoose.Types.ObjectId(request.params.necessityId)}},
 			{$project: {
 				_id: 1,
 				items: 1,
@@ -175,7 +195,7 @@ exports.getNecessityById = {
 			{$project: {_id: 0}}],
 			function(err, doc) {
 				if (!err) {
-					return reply(doc);
+					return reply(doc[0]);
 				}
 				console.log(err);
 				return reply(Boom.badImplementation());

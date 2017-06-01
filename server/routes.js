@@ -61,7 +61,7 @@ exports.endpoints = [
   },
   {
     method: 'get',
-    path: '/necessities/{_id}',
+    path: '/necessities/{necessityId}',
     config: Necessity.getNecessityById
   },
   {
@@ -88,5 +88,10 @@ exports.endpoints = [
     method: 'get',
     path: '/necessities/{necessityId}/materials',
     config: Necessity.getMaterials
+  },
+  {
+    method: 'get',
+    path: '/necessities/{necessityId}/items',
+    config: Necessity.getItemsByNecessityId
   }
 ];
