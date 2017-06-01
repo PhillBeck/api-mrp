@@ -6,5 +6,6 @@
 	"necessity.notFound": "Necessidade não encontrada.",
 	"necessity.productNotFound": "Produto não encontrado.",
 	"necessity.items.notFound": "O item não foi encontrado",
-	"product.invalidProductType": "productType deve estar contido em [1,2]"
+	"product.invalidProductType": "productType deve estar contido em [1,2]",
+	"http.badQuery": "http.badQuery"
 }

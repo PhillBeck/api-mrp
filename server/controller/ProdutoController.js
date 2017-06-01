@@ -143,7 +143,7 @@ exports.getProducts = {
 		}
 	},
 	handler: function(request, reply) {
-		httpTools.searchQuery(null, request.query, null, function(search, filters){
+		httpTools.searchQuery(null, request.query, null, function(search, filters) {
 			Produto.paginate(search, filters, function(err, product){
 				if (!err) {
 					try {
@@ -159,7 +159,7 @@ exports.getProducts = {
 
 			});
 		}, function(err) {
-			reply(Boom.badRequest(request.i18n.__( "http.badQuery" )));
+			reply(Boom.badRequest(request.i18n.__( "httpUtils.badQuery" )));
 		});
 	}
 };

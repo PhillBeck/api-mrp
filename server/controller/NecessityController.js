@@ -158,8 +158,8 @@ exports.getItemsByNecessityId = {
 			necessityId: Joi.objectId().required()
 		},
 		query: {
-			_page: Joi.number(),
-			_limit: Joi.number()
+			_page: Joi.number().min(1),
+			_limit: Joi.number().min(1)
 		}
 	},
 	handler: function(request, reply) {
@@ -169,37 +169,45 @@ exports.getItemsByNecessityId = {
 		options.limit = request.query._limit === undefined ? 10 : request.query._limit;
 		options.skip = options.limit * (options.page - 1);
 
-		if (options.page === 0 || options.limit === 0) {
-			return reply(Boom.badRequest(request.i18n.__("httpUtils.badQuery")));
-		}
-
 		Necessity.aggregate([
 			{$match: {_id: mongoose.Types.ObjectId(request.params.necessityId)}},
 			{$project: {
-				_id: 1,
-				items: 1,
 				total: {$size: "$items"}
-			}},
-			{$unwind: "$items"},
-			{$skip: options.skip},
-			{$limit: options.limit},
-			{$group: {
-				_id: "$_id",
-				docs: {$push: "$items"},
-				total: {$first: "$total"},
-			}},
-			{$addFields: {
-				page: options.page,
-				pages: {$ceil: {$divide: ["$total", options.limit]}},
-				limit: options.limit
-			}},
-			{$project: {_id: 0}}],
+			}}],
 			function(err, doc) {
 				if (!err) {
-					return reply(doc[0]);
+					if (doc.length === 0)
+					{
+						return reply(Boom.notFound(request.i18n.__("necessity.notFound")));
+					}
+
+					var ret = {};
+					ret.total = doc[0].total;
+					ret.pages = Math.ceil(ret.total / options.limit);
+					ret.page = options.page;
+					ret.limit = options.limit
+
+					Necessity.aggregate([
+						{$match: {_id: mongoose.Types.ObjectId(request.params.necessityId)}},
+						{$project: {items: 1}},
+						{$unwind: "$items"},
+						{$skip: options.skip},
+						{$limit: options.limit}
+						]
+						,function(e, doc) {
+							if (e) {
+								console.log(e);
+								return reply(Boom.badImplementation());
+							}
+
+							ret.docs = doc;
+							return reply(ret);
+						});
 				}
-				console.log(err);
-				return reply(Boom.badImplementation());
+				else {
+					console.log(err);
+					return reply(Boom.badImplementation());
+				}
 			});
 	}
 };
@@ -290,7 +298,7 @@ exports.removeItem = {
 			if (!err) {
 				if (doc) {
 					try {
-						item = doc.items.id(request.params.itemId).remove();
+						var item = doc.items.id(request.params.itemId).remove();
 
 						doc.save(function(e) {
 							if (!e) {
@@ -365,6 +373,11 @@ exports.getMaterials = {
 	validate: {
 		params: {
 			necessityId: Joi.objectId().required()
+		},
+		query: {
+			_search: Joi.string(),
+			_redirectUri: Joi.string().required(),
+			_code: Joi.string().required()
 		}
 	},
 	handler: function(request, reply) {
@@ -372,6 +385,9 @@ exports.getMaterials = {
 		Necessity.findById(request.params.necessityId, function(err, doc) {
 			if (!err) {
 				if (doc) {
+					if (!doc.items || !(doc.items.length >0)) {
+						return reply([]);
+					}
 						calculateMaterials(doc, reply);
 				}
 				else {
@@ -387,9 +403,6 @@ exports.getMaterials = {
 };
 
 function calculateMaterials(necessity, reply) {
-	if (!necessity.items || !(necessity.items.length > 0)) {
-		done(new Error('Empty items list'));
-	}
 
 	async.map(necessity.items, function(item, done) {
 
@@ -417,11 +430,7 @@ function calculateMaterials(necessity, reply) {
 	}, function(err, results) {
 
 		let aux = _.flatten(results);
-
-		console.log(results[0]);
-		console.log(aux);
-
-		let ret = groupObjectArrayBy(aux, 'id', function(element, acumulator) {
+		let ret = groupObjectArrayBy(aux, '_id', function(element, acumulator) {
 			if (acumulator && acumulator.quantity) {
 				acumulator.quantity += element.quantity;
 				return acumulator;
@@ -438,7 +447,7 @@ function calculateMaterials(necessity, reply) {
 function prepareMaterialsArray(product, currentQuantity, array) { 
 
 	currentQuantity = currentQuantity === undefined ? 1 : currentQuantity;
-	var obj = {id: product._id};
+	var obj = shallowClone(product);
 
 	if (product.relationProperties) {
 		let quantity = product.relationProperties.quantity === undefined ? 1 : product.relationProperties.quantity
@@ -525,4 +534,26 @@ function arrayObjectIndexOf(myArray, searchTerm, property) {
 		}
 	}
 	return -1;
+}
+
+function shallowClone(obj) {
+	if (null == obj || "object" != typeof obj) {
+		return obj;
+	}
+
+	var ret = {};
+
+	try {
+		Object.keys(obj._doc).forEach(key =>{
+			ret[key] = obj._doc[key];
+		});
+	}
+	catch (e)
+	{
+		Object.keys(obj).forEach(key => {
+			ret[key] = obj[key]
+		});
+	}
+
+	return ret;
 }
