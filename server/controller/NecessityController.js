@@ -6,6 +6,7 @@ var Joi = require('joi'),
 	Necessity = require('../model/NecessityModel').Necessity,
 	Product = require('../model/ProdutoModel').Produto,
 	async = require('async'),
+	_ = require('lodash'),
 	mongoose = require('mongoose');
 Joi.objectId = require('joi-objectid')(Joi);
 
@@ -167,7 +168,7 @@ exports.getItemsByNecessityId = {
 		options.page = request.query._page === undefined ? 1 : request.query._page;
 		options.limit = request.query._limit === undefined ? 10 : request.query._limit;
 		options.skip = options.limit * (options.page - 1);
-		
+
 		if (options.page === 0 || options.limit === 0) {
 			return reply(Boom.badRequest(request.i18n.__("httpUtils.badQuery")));
 		}
@@ -184,7 +185,7 @@ exports.getItemsByNecessityId = {
 			{$limit: options.limit},
 			{$group: {
 				_id: "$_id",
-				items: {$push: "$items"},
+				docs: {$push: "$items"},
 				total: {$first: "$total"},
 			}},
 			{$addFields: {
@@ -328,10 +329,11 @@ exports.updateItem = {
 			if (!err) {
 				if (doc) {
 
-					var item = doc.items.id(request.params.itemId);
+					var i = arrayObjectIndexOf(doc.items, request.params.itemId, '_id');
 
-					if (item) {
-						item = request.payload;
+					if (i != -1) {
+						doc.items[i] = request.payload;
+						doc.items[i]._id = request.params.itemId;
 						doc.save(function(e) {
 
 							if (!e) {
@@ -404,16 +406,32 @@ function calculateMaterials(necessity, reply) {
 		Product.getRelationships(searchConfig, function(err, obj) {
 			if (!err) {
 
-				var ret = [];
-				prepareMaterialsArray(obj.docs, 1, ret);
-				done(undefined,ret);
+				let materials = [];
+				prepareMaterialsArray(obj.docs, item.quantity, materials);
+				done(undefined,materials);
 				return
 			}
 			done();
 			return;
 		});
 	}, function(err, results) {
-		return reply(results);
+
+		let aux = _.flatten(results);
+
+		console.log(results[0]);
+		console.log(aux);
+
+		let ret = groupObjectArrayBy(aux, 'id', function(element, acumulator) {
+			if (acumulator && acumulator.quantity) {
+				acumulator.quantity += element.quantity;
+				return acumulator;
+			}
+
+			return element;
+
+		})
+
+		return reply(ret);
 	});
 }
 
@@ -481,4 +499,30 @@ function cleanNecessity(obj) {
 	}
 
 	return obj;
+}
+
+function groupObjectArrayBy(array, property, iteratee) {
+	var ret = [];
+
+	array.forEach(a => {
+		let i = arrayObjectIndexOf(ret, a[property], property);
+
+		if (i != -1){
+			ret [i] = iteratee(a, ret[i]);
+		}
+		else {
+			ret.push(iteratee(a, undefined));
+		}
+	})
+
+	return ret;
+}
+
+function arrayObjectIndexOf(myArray, searchTerm, property) {
+	for(var i = 0, len = myArray.length; i < len; i++) {
+		if (myArray[i][property].toString() == searchTerm.toString()) {
+			return i;
+		}
+	}
+	return -1;
 }
