@@ -181,26 +181,37 @@ exports.getItemsByNecessityId = {
 						return reply(Boom.notFound(request.i18n.__("necessity.notFound")));
 					}
 
-					var ret = {};
-					ret.total = doc[0].total;
-					ret.pages = Math.ceil(ret.total / options.limit);
-					ret.page = options.page;
-					ret.limit = options.limit
-
 					Necessity.aggregate([
 						{$match: {_id: mongoose.Types.ObjectId(request.params.necessityId)}},
 						{$project: {items: 1}},
 						{$unwind: "$items"},
 						{$skip: options.skip},
-						{$limit: options.limit}
+						{$limit: options.limit},
+						{$group: {
+							_id: null,
+							docs: {$push: "$items"}
+						}},
+						{$project: {_id: 0}}
 						]
-						,function(e, doc) {
+						,function(e, docs) {
 							if (e) {
 								console.log(e);
 								return reply(Boom.badImplementation());
 							}
 
-							ret.docs = doc;
+							try {
+								var ret = docs[0];
+								ret.total = doc[0].total;
+							}
+							catch (error) {
+								var ret = {items: []};
+								ret.total = 0;
+							}
+
+							ret.pages = Math.ceil(ret.total / options.limit);
+							ret.page = options.page;
+							ret.limit = options.limit;
+
 							return reply(ret);
 						});
 				}
@@ -297,25 +308,28 @@ exports.removeItem = {
 		Necessity.findById(request.params.necessityId, function(err, doc) {
 			if (!err) {
 				if (doc) {
-					try {
-						var item = doc.items.id(request.params.itemId).remove();
 
-						doc.save(function(e) {
-							if (!e) {
-								return reply().code(204);
-							}
-							return reply(Boom.badImplementation());
-						});
+					var item = doc.items.id(request.params.itemId);
+
+					if (!item) {
+						return reply(Boom.notFound(request.i18n.__("necessity.items.notFound")));
 					}
-					catch (e) {
-						console.log(e);
-						return reply().code(204);
-					}
+
+					item.remove();
+
+					doc.save(function(e) {
+						if (!e) {
+							return reply().code(204);
+						}
+						console.log(err);
+						return reply(Boom.badImplementation());
+					});
 				}
-				return reply(Boom.notFound(request.i18n.__("necessity.notFound")));
 			}
-			console.log(err);
-			return reply(Boom.badImplementation());
+			else {
+				console.log(err);
+				return reply(Boom.badImplementation());
+			}
 		});
 	}
 };
@@ -435,11 +449,8 @@ function calculateMaterials(necessity, reply) {
 				acumulator.quantity += element.quantity;
 				return acumulator;
 			}
-
 			return element;
-
 		})
-
 		return reply(ret);
 	});
 }
