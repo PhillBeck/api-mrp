@@ -1,8 +1,17 @@
 'use strict';
 
-exports.config = {
-  hostCreate: 'http://localhost:9001/produtos',
-  hostDelete: 'http://localhost:9001/produto/',
-  hostUpdate: 'http://localhost:9001/produtos/',
-  hostGet: 'http://localhost:9001/produto/'
+var host = 'http://localhost:9002';
+var productsBasePath = '/products';
+
+module.exports = {
+	Product: function() {
+		this.code= Math.random().toString();
+		this.name= 'Test1';
+		this.family= 'Test1';
+		this.description= 'Test1';
+		this.amountInStock= 50;
+		this.unit= 'un';
+		this.leadTime= 20;
+		this.productType = 1;
+	},
 }

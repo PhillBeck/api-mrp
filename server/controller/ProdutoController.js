@@ -1,15 +1,16 @@
 'use strict';
 
 var Joi = require('joi'),
-Boom = require('boom'),
-httpTools = require('./../utils/httpTools'),
-Produto = require('../model/ProdutoModel').Produto,
-mongoose = require('mongoose'),
-uuidV4 = require('uuid/v4'),
-_ = require('lodash');
+	Boom = require('boom'),
+	httpTools = require('./../utils/httpTools'),
+	Produto = require('../model/ProdutoModel').Produto,
+	mongoose = require('mongoose'),
+	uuidV4 = require('uuid/v4'),
+	_ = require('lodash'),
+	log = require('../utils/log').Product;
 
+mongoose.Promise = require('q').Promise;
 Joi.objectId = require('joi-objectid')(Joi);
-
 
 function DocNode() {
 	this.node= {
@@ -31,19 +32,22 @@ function DocNode() {
 	this.document= {}
 };
 
+const productPayloadValidate = {
+	code:          Joi.string().required(),
+	name:          Joi.string().required(),
+	family:        Joi.string(),
+	productType:   Joi.number(),
+	description:   Joi.string(),
+	amountInStock: Joi.number(),
+	unit:          Joi.string(),
+	leadTime:      Joi.number(),
+	purchasePrice: Joi.number(),
+	_id: 		   Joi.string() 
+}
+
 exports.create = {
 	validate: {
-		payload: {
-			code:          Joi.string().required(),
-			name:          Joi.string().required(),
-			family:        Joi.string(),
-			productType:   Joi.number(),
-			description:   Joi.string(),
-			amountInStock: Joi.number(),
-			unit:          Joi.string(),
-			leadTime:      Joi.number(),
-			purchasePrice: Joi.number()
-		}
+		payload: productPayloadValidate
 	},
 	handler: function (request, reply) {
 
@@ -54,13 +58,24 @@ exports.create = {
 		var config = new DocNode();
 
 		config.document = request.payload;
+		delete config.document._id;
 
 		Produto.insertDocNode(config, function (err, product) {
 			if (!err) {
-				return reply(product).created('/products/' + product._id);
+				return reply(localize(product, request.i18n.getLocale())).created('/products/' + product._id);
 			}
-			console.log(err)
-			return reply(Boom.badImplementation());
+
+			switch (err.error) {
+				case 'duplicateKeyError':
+					return reply(Boom.badData(request.i18n.__("product.codeNotunique")));
+					break;
+				case 'invalidConfigError':
+				case 'mongoError':
+				case 'neo4jError':
+				default:
+					log.error(request, err);
+					return reply(Boom.badImplementation());
+			}
 		});
 	}
 };
@@ -77,36 +92,27 @@ exports.remove = {
 
 		config.document._id = request.params._id;
 
-		Produto.deleteDocNode(config, function(err, doc) {
+		Produto.softDeleteDocNode(config, function(err, doc) {
 			if (!err) {
-				return reply().code(204);
+				reply().code(204);
+				return;
 			}
-
-			console.log(err);
+			
 			switch (err.error) {
-				case 'Not Found':
+				case 'notFound':
 					return reply(Boom.notFound(request.i18n.__("product.notFound")));
 					break;
 				default:
-					return reply(Boom.badImplementation);
+					log.error(request, err);
+					return reply(Boom.badImplementation());
 			}
 		})
 	}
 };
 
 exports.update = {
-	validate : {
-		payload : {
-			code:          Joi.string().required(),
-			name:          Joi.string().required(),
-			family:        Joi.string(),
-			productType:   Joi.number(),
-			description:   Joi.string(),
-			amountInStock: Joi.number(),
-			unit:          Joi.string(),
-			leadTime:      Joi.number(),
-			purchasePrice: Joi.number()
-		},
+	validate: {
+		payload: productPayloadValidate,
 		params: {
 			_id:  		   Joi.objectId().required()
 		}
@@ -127,10 +133,15 @@ exports.update = {
 				return reply().code(204);
 			}
 
-			console.log(err);
-			return reply(Boom.badImplementation());
+			switch (err.error) {
+				case 'notFound':
+					return reply(Boom.notFound(request.i18n.__("product.notFound")));
+					break;
+				default:
+					log.error(request, err);
+					return reply(Boom.badImplementation());
+			}
 		});
-
 	}
 };
 
@@ -144,19 +155,20 @@ exports.getProducts = {
 	},
 	handler: function(request, reply) {
 		httpTools.searchQuery(null, request.query, null, function(search, filters) {
+			search["$and"] = [{DELETED: {$eq: false}}];
 			Produto.paginate(search, filters, function(err, product){
 				if (!err) {
-					try {
-						return reply(localize(product, request.i18n.getLocale()));
-					}
-					catch (e) {
-						console.log(e);
-						return reply(Boom.badImplementation());
-					}
+					return reply(localize(product, request.i18n.getLocale()));
 				}
 
-				return reply(Boom.badImplementation(err));
-
+				switch (err.error) {
+					case 'notFound':
+						return reply(Boom.notFound(request.i18n.__("product.notFound")));
+						break;
+					default:
+						log.error(request, err);
+						return reply(Boom.badImplementation(err));
+				}
 			});
 		}, function(err) {
 			reply(Boom.badRequest(request.i18n.__( "httpUtils.badQuery" )));
@@ -173,17 +185,20 @@ exports.getProductById = {
 	handler: function(request, reply) {
 		Produto.findById(request.params._id, function(err, doc) {
 			if (err) {
+				log.error(request, err)
+				return reply(Boom.badImplementation);
+			}
+
+			if (!doc || doc.DELETED != false) {
 				return reply(Boom.notFound(request.i18n.__("product.notFound")));
 			}
 			try {
 				var ret = localize(doc, request.i18n.getLocale());
 			}
 			catch (e) {
-				console.log(e);
+				log.error(request, e);
 			}
-
 			return reply(ret);
-			
 		});
 	}
 };
@@ -219,21 +234,20 @@ exports.addChildren = {
 
 		validateChildren(request.params._parentId, request.params._childId, function(err) {
 			if (err) {
-				return reply(Boom.badData('Circular dependencies'));
+				return reply(Boom.badData(request.i18n.__("produto.addChildren.circularDependencies")));
 			}
-
 
 			Produto.associateNodes(config, function(err, obj) {
 				if(!err) {
 					return reply().code(204);
 				}
 
-				console.log(JSON.stringify(err));
 				switch (err.error) {
-					case "Nodes doesn't exist":
-						return reply(Boom.notFound('Product not Found'));
+					case 'notFound':
+						return reply(Boom.notFound(request.i18n.__("product.notFound")));
 						break;
 					default:
+						log.error(request, err);
 						return reply(Boom.badImplementation());
 				}
 			});
@@ -266,20 +280,12 @@ exports.getChildren = {
 				return reply(docs);
 			}
 
-			console.log(err);
-
-			switch(err) {
-				case 'Item not found':
-					return reply(Boom.notFound('Product not found'));
-					break;
-				case 'No Relationships Found':
-					Produto.findById(searchConfig.document._id, function(err, doc) {
-						var docs = [];
-						docs.push(extractTreeData(doc));
-						return reply(docs);
-					});
+			switch(err.error) {
+				case 'notFound':
+					return reply(Boom.notFound(request.i18n.__("product.notFound")));
 					break;
 				default:
+					log.error(request, err);
 					return reply(Boom.badImplementation());
 			}
 		});
@@ -304,12 +310,12 @@ exports.removeChildren = {
 				return reply().code(204);
 			}
 
-			console.log(err);
 			switch(err.error) {
-				case "Node doesn't exist":
-					return reply(Boom.notFound('Product not Found'));
+				case 'notFound':
+					return reply(Boom.notFound(request.i18n.__("product.notFound")));
 					break;
 				default:
+					log.error(request, err);
 					return reply(Boom.badImplementation());
 
 			}
@@ -330,12 +336,15 @@ function validateChildren(parentId, childId, callback) {
 	searchConfig.document._id = childId;
 
 	Produto.getDependencies(searchConfig, function(err, obj) {
+		if (err) {
+			return callback(err);
+		}
 
 		if (obj.indexOf(parentId) != -1) {
-		    callback(422);
+		    return callback(422);
 		}
 		else {
-			callback(undefined)
+			return callback(undefined)
 		}
 	});
 }
@@ -360,7 +369,6 @@ function extractTreeData(obj) {
 }
 
 function localize(docs, locale) {
-
 	try {
 		var ret = shallowClone(docs);
 		if (docs.docs instanceof Array) {
@@ -368,10 +376,14 @@ function localize(docs, locale) {
 				try {
 					let aux = shallowClone(a);
 					aux.productType = localizeProductType(a, locale);
+					delete aux.__v;
+					delete aux.DELETED;
 					return aux;
 				}
 				catch (e) {
-					console.log(e);
+					log.warn(e);
+					delete a.__v;
+					delete a.DELETED;
 					return a
 				}
 			});
@@ -382,13 +394,19 @@ function localize(docs, locale) {
 				ret.productType = localizeProductType(docs, locale);
 			}
 			catch (e) {
-				console.log(e);
+				log.warn(e);
+				delete docs.__v;
+				delete docs.DELETED;
 				return docs;
 			}
 		}
+		delete ret.__v;
+		delete ret.DELETED;
 		return ret;
 	}
 	catch (err) {
+		delete docs.__v;
+		delete docs.DELETED;
 		return docs;
 	}
 }
@@ -422,7 +440,7 @@ function arrayObjectIndexOf(myArray, searchTerm, property) {
 }
 
 function shallowClone(obj) {
-	if (null == obj || "object" != typeof obj) {
+	if (null === obj || "object" != typeof obj) {
 		return obj;
 	}
 

@@ -10,10 +10,10 @@
     "async": "^2.4.1",
     "bcrypt": "^1.0.2",
     "boom": "*",
-    "find-remove": "^1.0.1",
-    "flatten-mongoose-validation-error": "^1.0.1",
+    "bunyan": "^1.8.10",
     "fs-extra": "^3.0.0",
     "hapi": "*",
+    "hapi-bunyan": "https://github.com/PhillBeck/hapi-bunyan/tarball/master",
     "hapi-i18n": "^1.0.4",
     "hapi-locale": "^1.0.2",
     "joi": "*",
@@ -21,12 +21,11 @@
     "joi18n": "0.0.18",
     "kue": "^0.11.5",
     "lodash": "^4.17.4",
-    "mongoose": "*",
+    "mongo-writable-stream": "https://github.com/pgbrtecnologia/node-mongo-writable-stream/tarball/master",
+    "mongoose": "^4.10.5",
     "mongoose-aggregate-paginate": "^1.0.5",
     "mongoose-paginate": "^5.0.3",
-    "mongoose-path-tree": "^1.3.5",
-    "multiparty": "^4.1.3",
-    "neomongoose": "*",
+    "neomongoose": "https://github.com/diegosanteri/neomongoose/tarball/master",
     "q": "^1.5.0",
     "uuid": "^3.0.1"
   },
@@ -42,11 +41,12 @@
     "email": "phillipcbeck@gmail.com"
   },
   "devDependencies": {
+    "axios": "^0.16.2",
     "chai": "^3.5.0",
     "mocha": "^3.3.0",
-    "mocha-steps": "^1.0.2"
+    "supertest": "^3.0.0"
   },
   "scripts": {
-    "test": "mocha --require mocha-steps"
+    "test": "mocha -t 5000"
   }
 }

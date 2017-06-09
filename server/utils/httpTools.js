@@ -32,7 +32,7 @@ function searchQuery(id, query, options, sucessCallback, errorCallback){
       else{
         search['$and'] = []
         search['$and'].push(id);
-        search['$and'].push(aux)
+        search['$and'].push(aux);
       }
     }
     else{
@@ -65,7 +65,6 @@ function createQuery (attrs){
     }
     else{
       if(op === '$eq'){
-        console.log(keyValue.value)
         if(keyValue.value == "true" || keyValue.value == "false"){
           object[keyValue.key] = keyValue.value;
         }else{

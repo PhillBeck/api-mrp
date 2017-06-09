@@ -22,7 +22,8 @@ var ProdutoSchema = new Schema({
   unit:          {type: String},
   leadTime:      {type: Number},
   purchasePrice: {type: Number},
-  costValue:     {type: Number}
+  costValue:     {type: Number},
+  DELETED:       {type: Boolean, default: false}
 });
 
 ProdutoSchema.plugin(mongoosePaginate);

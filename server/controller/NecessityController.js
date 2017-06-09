@@ -10,6 +10,8 @@ var Joi = require('joi'),
 	mongoose = require('mongoose');
 Joi.objectId = require('joi-objectid')(Joi);
 
+mongoose.Promise = require('q').Promise;
+
 
 exports.createNecessity = {
 	validate: {

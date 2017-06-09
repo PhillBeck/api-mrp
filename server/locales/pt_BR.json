@@ -7,5 +7,6 @@
 	"necessity.productNotFound": "Produto não encontrado.",
 	"necessity.items.notFound": "O item não foi encontrado",
 	"product.invalidProductType": "productType deve estar contido em [1,2]",
-	"http.badQuery": "http.badQuery"
+	"product.codeNotunique": "O campo 'code' não pode conter um valor duplicado",
+	"produto.addChildren.circularDependencies" : "Dependencias circulares"
 }

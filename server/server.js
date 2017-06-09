@@ -1,10 +1,12 @@
 var Hapi = require('hapi'),
-  Routes = require('./routes'),
-  Db = require('./config/db'),
-  Config = require('./config/config');
+	Routes = require('./routes'),
+	Db = require('./config/db'),
+	Config = require('./config/config'),
+	bunyan = require('bunyan'),
+	mongoStream = require('mongo-writable-stream');
 
 var app = {};
-app.config = Config;
+	app.config = Config;
 
 var server = new Hapi.Server();
 
@@ -13,35 +15,52 @@ server.connection({ port: app.config.server.port });
 server.route(Routes.endpoints);
 
 var plugins = [
-  {
-    register: require('hapi-locale'),
-    options: {
-      scan: {
-        path: __dirname + "/locales"
-      },
-      order: ['headers'],
-      header: 'accept-language'
-    }
-  },
-  {
-    register: require('joi18n')
-  },
-  {
-   register: require( "hapi-i18n" ),
-    options: {
-      locales: ["pt_BR", "en_US"],
-      directory: __dirname + "/locales",
-      languageHeaderField: "accept-language"
-    }
-  }
+	{
+		register: require('hapi-locale'),
+		options: {
+			scan: {
+				path: __dirname + "/locales"
+			},
+			order: ['headers'],
+			header: 'accept-language'
+		}
+	},
+	{
+		register: require('joi18n')
+	},
+	{
+		register: require( "hapi-i18n" ),
+		options: {
+			locales: ["pt_BR", "en_US"],
+			directory: __dirname + "/locales",
+			languageHeaderField: "accept-language"
+		}
+	}/*,
+	{
+		register: require('hapi-bunyan'),
+		options: {
+			logger: bunyan.createLogger({
+				name: 'test',
+				level: 'debug',
+				stream: new mongoStream({
+					url: 'mongodb://localhost/umaflex-log',
+					collection: 'hapi'
+				})
+			}),
+			includeTags: true,
+			includeFields: [{req_id: 'id'}, {req_method: 'method'}, {req_path: 'path'}]
+		}
+	}*/
 ];
 
 server.register(plugins, function ( err ){
-    if ( err ){
-      console.log( err );
-    }
+	if ( err ){
+		console.log( err );
+	}
 });
 
 server.start(function () {
-  console.log('Server started ', server.info.uri);
+	console.log('Server started ', server.info.uri);
 });
+
+module.exports = server;
