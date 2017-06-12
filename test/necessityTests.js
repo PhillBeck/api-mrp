@@ -99,7 +99,7 @@ exports.run = function(server) {
 					}
 				], function() {
 					request(server.listener)
-					.post('/necessities/items/')
+					.post('/necessities/' + necessityId +'/items')
 					.send({
 						productId: productId,
 						quantity: 5,
@@ -126,9 +126,56 @@ exports.run = function(server) {
 					expect(res.body.docs[0].__v).to.be.undefined;
 					done();
 				});
+			});			
+		});
+
+		describe('Get Necessity By Id', function() {
+				
+			var productId;
+			var necessity;
+
+			before(function(done) {
+				async.parallel([
+					function(callback) {
+						request(server.listener)
+						.post('/products')
+						.send(new config.Product())
+						.end(function(err, res) {
+							productId = res.body._id;
+							callback();
+						});
+					},
+					function(callback) {
+						request(server.listener)
+						.post('/necessities')
+						.send({name: 'testName', description: 'testDescription'})
+						.end(function(err, res) {
+							necessity = res.body;
+							callback();
+						});
+					}
+				], function() {
+					request(server.listener)
+					.post('/necessities/' + necessity._id +'/items')
+					.send({
+						productId: productId,
+						quantity: 5,
+						deadline: '2017-06-30'
+					}).end(function(err, res) {
+						done();
+					});
+				});
 			});
 
-			it 
+			it('Should get correctly', function(done) {
+				request(server.listener)
+				.get('/necessities/' + necessity._id)
+				.end(function(err, res) {
+					expect(res.statusCode).to.equal(200);
+					expect(res.body).to.equal
+				})
+			})
+
 		});
 	});
 }
