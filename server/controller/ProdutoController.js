@@ -258,7 +258,7 @@ exports.addChildren = {
 exports.getChildren = {
 	validate: {
 		params: {
-			_id: Joi.string().required()
+			_id: Joi.objectId().required()
 		}
 	},
 	handler: function(request, reply) {

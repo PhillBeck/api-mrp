@@ -1,0 +1,20 @@
+mongo:
+  image: mongo:3.4
+  ports:
+    - '27017'
+
+neo4j:
+  image: neo4j:3.2
+  environment:
+    - NEO4J_AUTH=none
+  ports:
+    - '7474'
+    - '7687'
+
+app:
+  image: teste:latest
+  ports:
+    - '9001:9002'
+  links:
+    - mongo
+    - neo4j

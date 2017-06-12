@@ -5,8 +5,7 @@ const assert = require('assert'),
 	fs = require('fs'),
 	async = require('async');
 
-	var file = __dirname + '/server/locales/pt_BR.json',
-	messages = JSON.parse(fs.readFileSync( file.replace('/test', ''), 'utf8'));
+	messages = JSON.parse(fs.readFileSync( './server/locales/pt_BR.json', 'utf8'));
 
 exports.run = function(server) {
 	describe('Products', function() {
@@ -515,66 +514,89 @@ exports.run = function(server) {
 		});
 
 		describe('Get children', function() {
-			var testProducts = [];
 
-			before(function(done) {
-				async.times(5, function(n, next) {
-					request(server.listener)
-					.post('/products')
-					.send(new config.Product())
-					.end(function(err, res) {
-						next(err, res.body);
-					});
-				}, function(err, docs) {
-					if (err) return done(err);
-					testProducts = docs;
+			describe('Valid Inputs', function() {
+				var testProducts = [];
 
-					async.times(3, function(n, next) {
+				before(function(done) {
+					async.times(5, function(n, next) {
 						request(server.listener)
-						.put('/products/' + testProducts[n]._id + '/children/' + testProducts[n+1]._id)
-						.send({quantity: n+1})
+						.post('/products')
+						.send(new config.Product())
 						.end(function(err, res) {
-							request(server.listener)
-							.put('/products/' + testProducts[n]._id + '/children/' + testProducts[n+2]._id)
-							.send({quantity: n+2})
-							.end(function(err, res) {
-								next();
-							});
+							next(err, res.body);
 						});
 					}, function(err, docs) {
-						done();
+						if (err) return done(err);
+						testProducts = docs;
+
+						async.times(3, function(n, next) {
+							request(server.listener)
+							.put('/products/' + testProducts[n]._id + '/children/' + testProducts[n+1]._id)
+							.send({quantity: n+1})
+							.end(function(err, res) {
+								request(server.listener)
+								.put('/products/' + testProducts[n]._id + '/children/' + testProducts[n+2]._id)
+								.send({quantity: n+2})
+								.end(function(err, res) {
+									next();
+								});
+							});
+						}, function(err, docs) {
+							done();
+						});
 					});
 				});
-			});
 
-			it('Should return correct tree', function(done) {
-				request(server.listener)
-				.get('/products/' + testProducts[0]._id + '/children')
-				.end(function(err, res) {
-					expect(res.body).to.be.an('Array');
-					expect(res.body).to.have.length(1);
-					var tree = res.body[0]
-					expect(tree.text).to.eql(testProducts[0].code + ' - ' + testProducts[0].name)
-					expect(tree.children[0].data.quantity).to.be.oneOf([1,2]);
-					expect(tree.children[0].data._id).to.be.oneOf([testProducts[1]._id, testProducts[2]._id])
-					done();
-				});
-			});
-
-			it('Softdeleted son - should return correct tree', function(done) {
-				request(server.listener)
-				.delete('/products/' + testProducts[3]._id)
-				.end(function(err, res) {
+				it('Should return correct tree', function(done) {
 					request(server.listener)
-					.get('/products/' + testProducts[1]._id + '/children')
+					.get('/products/' + testProducts[0]._id + '/children')
 					.end(function(err, res) {
-						let tree = res.body[0];
-						expect(tree.children).to.have.length(1);
-						expect(tree.text).to.eql(testProducts[1].code + ' - ' + testProducts[1].name)
-						expect(tree.children[0].children).to.have.length(1);
+						expect(res.body).to.be.an('Array');
+						expect(res.body).to.have.length(1);
+						var tree = res.body[0]
+						expect(tree.text).to.eql(testProducts[0].code + ' - ' + testProducts[0].name)
+						expect(tree.children[0].data.quantity).to.be.oneOf([1,2]);
+						expect(tree.children[0].data._id).to.be.oneOf([testProducts[1]._id, testProducts[2]._id])
 						done();
 					});
 				});
+
+				it('Softdeleted son - should return correct tree', function(done) {
+					request(server.listener)
+					.delete('/products/' + testProducts[3]._id)
+					.end(function(err, res) {
+						request(server.listener)
+						.get('/products/' + testProducts[1]._id + '/children')
+						.end(function(err, res) {
+							let tree = res.body[0];
+							expect(tree.children).to.have.length(1);
+							expect(tree.text).to.eql(testProducts[1].code + ' - ' + testProducts[1].name)
+							expect(tree.children[0].children).to.have.length(1);
+							done();
+						});
+					});
+				});
+			});
+
+			describe('Invalid Inputs', function() {
+				it('Invalid id - should return 400', function(done) {
+					request(server.listener)
+					.get('/products/123/children')
+					.end(function(err, res) {
+						expect(res.statusCode).to.equal(400);
+						done();
+					});
+				});
+
+				it('Inexistent id - should return 404', function(done) {
+					request(server.listener)
+					.get('/products/012345678901234567890123/children')
+					.end(function(err, res) {
+						expect(res.statusCode).to.equal(404);
+						done();
+					});
+				})
 			});
 		});
 	});

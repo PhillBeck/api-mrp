@@ -29,7 +29,10 @@ exports.createNecessity = {
 			if (!e) {
 				necessity.save(function(err, doc) {
 					if (!err) {
-						return reply(doc);
+						var ret = shallowClone(doc);
+						delete ret.__v;
+						delete ret.items;
+						return reply(ret).created('/necessities/' + doc._id);
 					}
 
 					console.log(err);
@@ -60,11 +63,10 @@ exports.getNecessities = {
 	},
 	handler: function(request, reply) {
 		httpTools.searchQuery(null, request.query, null, function(search, filters) {
-			filters.populate = {path: 'items.productId'};
-			filters.select = '-items';
-			Necessity.paginate(search, filters, function(err, product) {
+			filters.select = '-items -__v';
+			Necessity.paginate(search, filters, function(err, doc) {
 				if (!err) {
-					return reply(product);
+					return reply(doc);
 				}
 
 				console.log(err);

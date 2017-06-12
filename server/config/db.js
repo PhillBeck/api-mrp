@@ -1,7 +1,7 @@
 'use strict';
 
 var Mongoose = require('mongoose'),
-	config = require('./config');
+	config = process.env.NODE_ENV === undefined ? require('./development') : require('./' + process.env.NODE_ENV);
 
 //Mongoose.connect(config.database.url);
 Mongoose.connect('mongodb://' + config.database.host + '/' + config.database.db);

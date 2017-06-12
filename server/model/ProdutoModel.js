@@ -5,8 +5,8 @@ var mongoose = require('mongoose'),
   mongoosePaginate = require('mongoose-paginate'),
   mongooseAggregatePaginate = require('mongoose-aggregate-paginate'),
   neomongoose = require('neomongoose'),
-  options = require('../config/config').neo4j;
-
+  config = process.env.NODE_ENV === undefined ? require('../config/development') : require('../config/' + process.env.NODE_ENV),
+  options = config.neo4j;
 /**
   * @module  Produto
   * @description Produto schema

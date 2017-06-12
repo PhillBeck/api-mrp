@@ -5,6 +5,8 @@ const assert = require('assert'),
 	expect = require('chai').expect,
 	request = require('supertest'),
 	server = require('../server/server'),
-	productTests = require('./productTests');
+	productTests = require('./productTests'),
+	necessityTests = require('./necessityTests');
 
-	productTests.run(server);
+productTests.run(server);
+necessityTests.run(server);

@@ -1,9 +1,10 @@
 var Hapi = require('hapi'),
 	Routes = require('./routes'),
 	Db = require('./config/db'),
-	Config = require('./config/config'),
 	bunyan = require('bunyan'),
-	mongoStream = require('mongo-writable-stream');
+	mongoStream = require('mongo-writable-stream'),
+	Config = process.env.NODE_ENV === undefined ? require('./config/development') : require('./config/' + process.env.NODE_ENV);
+
 
 var app = {};
 	app.config = Config;
@@ -35,22 +36,21 @@ var plugins = [
 			directory: __dirname + "/locales",
 			languageHeaderField: "accept-language"
 		}
-	}/*,
+	},
 	{
 		register: require('hapi-bunyan'),
 		options: {
 			logger: bunyan.createLogger({
-				name: 'test',
+				name: 'ServerLogger',
 				level: 'debug',
 				stream: new mongoStream({
 					url: 'mongodb://localhost/umaflex-log',
 					collection: 'hapi'
 				})
 			}),
-			includeTags: true,
-			includeFields: [{req_id: 'id'}, {req_method: 'method'}, {req_path: 'path'}]
+			includeTags: true
 		}
-	}*/
+	}
 ];
 
 server.register(plugins, function ( err ){

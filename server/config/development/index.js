@@ -6,7 +6,7 @@ module.exports = {
 		port: 9002
 	},
 	database: {
-		host: '127.0.0.1',
+		host: 'localhost',
 		port: 27017,
 		db: 'umaflex',
 		username: '',
