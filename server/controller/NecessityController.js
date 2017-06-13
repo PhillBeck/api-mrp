@@ -8,7 +8,10 @@ var Joi = require('joi'),
 	async = require('async'),
 	_ = require('lodash'),
 	mongoose = require('mongoose'),
-	log = require('../utils/log');
+	log = require('../utils/log'),
+	formatOutput = require('../utils/format'),
+	shallowClone = require('../utils/shallowClone'),
+	materialList = require('../model/materialListModel');
 Joi.objectId = require('joi-objectid')(Joi);
 
 mongoose.Promise = require('q').Promise;
@@ -195,16 +198,26 @@ exports.getItemsByNecessityId = {
 						{$skip: options.skip},
 						{$limit: options.limit},
 						{$lookup: {
-							from: "produto",
+							from: "produtos",
 							localField: "items.productId",
 							foreignField: "_id",
-							as: "produto"
+							as: "items.productInfo"
+						}},
+						{$addFields: {
+							'items.product': {
+								$arrayElemAt: ['$items.productInfo', 0]
+							}
 						}},
 						{$group: {
 							_id: null,
 							docs: {$push: "$items"}
 						}},
-						{$project: {_id: 0}}
+						{$project: {
+							_id: 0,
+							'docs._id': 0,
+							'docs.productId': 0,
+							'docs.productInfo': 0
+						}}
 						], function(e, docs) {
 							if (e) {
 								console.log(e);
@@ -395,7 +408,7 @@ exports.updateItem = {
 	}
 };
 
-exports.getMaterials = {
+exports.calculateMaterials = {
 	validate: {
 		params: {
 			necessityId: Joi.objectId().required()
@@ -409,10 +422,18 @@ exports.getMaterials = {
 		Necessity.findById(request.params.necessityId, function(err, doc) {
 			if (!err) {
 				if (doc) {
-					if (!doc.items || !(doc.items.length > 0)) {
-						return reply([]);
-					}
-						calculateMaterials(doc, reply);
+					calculateMaterials(doc, function(err, docs) {
+						let materialsModel = new materialList({items: docs});
+
+						materialsModel.save(function(err, doc) {
+							if (err) {
+								console.log(err);
+								return reply(Boom.badImplementation());
+							}
+
+							return reply().code(204).header('location', '/materials/' + doc._id);
+						});
+					});					
 				}
 				else {
 					return reply(Boom.notFound(request.i18n.__( "necessity.notFound" )));
@@ -426,7 +447,34 @@ exports.getMaterials = {
 	}
 };
 
-function calculateMaterials(necessity, reply) {
+exports.getMaterials = {
+	validate: {
+		params: {
+			_id: Joi.objectId().required()
+		},
+		query: {
+			_page: Joi.number(),
+			_limit: Joi.number()
+		}
+	},
+	handler: function(request, reply) {
+		let page = request.query._page === undefined ? 1 : request.query._page;
+		let limit = request.query._limit === undefined ? 15 : request.query._limit;
+		let id = mongoose.Types.ObjectId(request.params._id);
+
+		materialList.paginateArray({_id: id}, 'items', {page: page, limit: limit}, function(err, obj) {
+			if (err) {
+				console.log(err);
+				return reply(Boom.badImplementation());
+			}
+
+			return reply(obj);
+
+		});
+	}
+}
+
+function calculateMaterials(necessity, callback) {
 
 	async.map(necessity.items, function(item, done) {
 
@@ -442,16 +490,17 @@ function calculateMaterials(necessity, reply) {
 
 		Product.getRelationships(searchConfig, function(err, obj) {
 			if (!err) {
-
 				let materials = [];
 				prepareMaterialsArray(obj.docs, item.quantity, materials);
-				done(undefined,materials);
-				return
+				return done(undefined, materials);
 			}
-			done();
-			return;
+			return done(err);
 		});
 	}, function(err, results) {
+
+		if(err) {
+			return callback(err);
+		}
 
 		let flattenedResults = _.flatten(results);
 		let groupedResults = groupObjectArrayBy(flattenedResults, '_id', function(element, acumulator) {
@@ -462,20 +511,10 @@ function calculateMaterials(necessity, reply) {
 			return element;
 		});
 
-		return reply(formatMaterialOutput(groupedResults, ['__v', 'relationships', 'DELETED', 'relationProperties']));
+		return callback(undefined, groupedResults);
+
+		return reply(formatOutput(groupedResults, ['__v', 'relationships', 'DELETED', 'relationProperties']));
 	});
-}
-
-function formatMaterialOutput(products, exclude) {
-	var obj = products.map(item => {
-		let ret = shallowClone(item);
-
-		exclude.forEach(field => {delete ret[field]});
-
-		return ret;
-	});
-
-	return obj;
 }
 
 function prepareMaterialsArray(product, currentQuantity, array) { 
@@ -568,26 +607,4 @@ function arrayObjectIndexOf(myArray, searchTerm, property) {
 		}
 	}
 	return -1;
-}
-
-function shallowClone(obj) {
-	if (null == obj || "object" != typeof obj) {
-		return obj;
-	}
-
-	var ret = {};
-
-	try {
-		Object.keys(obj._doc).forEach(key =>{
-			ret[key] = obj._doc[key];
-		});
-	}
-	catch (e)
-	{
-		Object.keys(obj).forEach(key => {
-			ret[key] = obj[key]
-		});
-	}
-
-	return ret;
 }

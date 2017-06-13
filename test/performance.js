@@ -3,9 +3,26 @@ const async = require('async'),
 	  server = require('../server/server'),
 	  config = require('./config');
 
+const depthStep = 10;
+const depthMin = 10;
+const depthMax = 100;
 
 
-run(100,1, function(){process.exit(0)});
+const itemsStep = 10;
+const itemsMin = 10;
+const itemsMax = 100;
+
+async.timesSeries(Math.round((depthMax - depthMin) / depthStep), function(n, done) {
+
+	async.timesSeries(Math.round((itemsMax - itemsMin) / itemsStep), function(m, next) {
+		run(depthMin + n * depthStep, itemsMin + m * itemsStep, next);
+	}, function(err, docs) {
+		done();
+	})
+
+}, function(err, docs) {
+	process.exit(0)
+});
 
 function run(depth, numItems, done) {
 

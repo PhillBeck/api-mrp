@@ -7,6 +7,7 @@ var Joi = require('joi'),
 	mongoose = require('mongoose'),
 	uuidV4 = require('uuid/v4'),
 	_ = require('lodash'),
+	formatOutput = require('../utils/format'),
 	log = require('../utils/log').Product;
 
 mongoose.Promise = require('q').Promise;
@@ -62,7 +63,7 @@ exports.create = {
 
 		Produto.insertDocNode(config, function (err, product) {
 			if (!err) {
-				return reply(localize(product, request.i18n.getLocale())).created('/products/' + product._id);
+				return reply(formatOutput(product, ['__v', 'DELETED'])).created('/products/' + product._id);
 			}
 
 			switch (err.error) {
@@ -158,7 +159,7 @@ exports.getProducts = {
 			search["$and"] = [{DELETED: {$eq: false}}];
 			Produto.paginate(search, filters, function(err, product){
 				if (!err) {
-					return reply(localize(product, request.i18n.getLocale()));
+					return reply(formatOutput(product, ['__v', 'DELETED']));
 				}
 
 				switch (err.error) {
@@ -193,7 +194,7 @@ exports.getProductById = {
 				return reply(Boom.notFound(request.i18n.__("product.notFound")));
 			}
 			try {
-				var ret = localize(doc, request.i18n.getLocale());
+				var ret = formatOutput(doc, ['__v', 'DELETED']);
 			}
 			catch (e) {
 				log.error(request, e);
@@ -368,67 +369,7 @@ function extractTreeData(obj) {
 	return ret;
 }
 
-function localize(docs, locale) {
-	try {
-		var ret = shallowClone(docs);
-		if (docs.docs instanceof Array) {
-			ret.docs = docs.docs.map(a => {
-				try {
-					let aux = shallowClone(a);
-					aux.productType = localizeProductType(a, locale);
-					delete aux.__v;
-					delete aux.DELETED;
-					return aux;
-				}
-				catch (e) {
-					log.warn(e);
-					delete a.__v;
-					delete a.DELETED;
-					return a
-				}
-			});
-		}
-		else {
-			try {
 
-				ret.productType = localizeProductType(docs, locale);
-			}
-			catch (e) {
-				log.warn(e);
-				delete docs.__v;
-				delete docs.DELETED;
-				return docs;
-			}
-		}
-		delete ret.__v;
-		delete ret.DELETED;
-		return ret;
-	}
-	catch (err) {
-		delete docs.__v;
-		delete docs.DELETED;
-		return docs;
-	}
-}
-
-
-function localizeProductType(doc, locale) {
-
-	var productTypes = [
-		{type: 1, locales: [{locale: 'en_US', text: 'Bought'}, {locale:'pt_BR', text: 'Comprado'}]},
-		{type: 2, locales: [{locale: 'en_US', text: 'Manufactured'}, {locale:'pt_BR', text: 'Fabricado'}]}
-	];
-
-	var i = arrayObjectIndexOf(productTypes, doc.productType, 'type');
-
-	if (i != -1) {
-		var j = arrayObjectIndexOf(productTypes[i].locales, locale, 'locale');
-		var j = j == -1 ? 0 : j;
-
-		return productTypes[i].locales[j].text;
-	}	
-	throw 'Invalid ProductType code'; 
-}
 
 function arrayObjectIndexOf(myArray, searchTerm, property) {
 	for(var i = 0, len = myArray.length; i < len; i++) {
@@ -437,28 +378,6 @@ function arrayObjectIndexOf(myArray, searchTerm, property) {
 		}
 	}
 	return -1;
-}
-
-function shallowClone(obj) {
-	if (null === obj || "object" != typeof obj) {
-		return obj;
-	}
-
-	var ret = {};
-
-	try {
-		Object.keys(obj._doc).forEach(key =>{
-			ret[key] = obj._doc[key];
-		});
-	}
-	catch (e)
-	{
-		Object.keys(obj).forEach(key => {
-			ret[key] = obj[key]
-		});
-	}
-
-	return ret;
 }
 
 function isValidProductType(data) {

@@ -7,7 +7,7 @@ var mongoose = require('mongoose'),
 
 
 var NecessityItemSchema = new Schema({
-	productId: {type: Schema.Types.ObjectId, ref: 'produto', required: true},
+	productId: {type: Schema.Types.ObjectId, ref: 'produtos', required: true},
 	quantity:  {type: Number, required: true},
 	deadline:  {type: Date}
 });
