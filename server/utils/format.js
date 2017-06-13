@@ -17,7 +17,9 @@ function formatOutput(docs, exclude) {
 		});
 	}else if (docs.docs instanceof Array) {
 
-		obj = docs.docs.map(item => {
+		obj = shallowClone(docs);
+
+		obj.docs = docs.docs.map(item => {
 			let ret = shallowClone(item);
 
 			exclude.forEach(field => {delete ret[field]});
