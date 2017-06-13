@@ -8,5 +8,5 @@
 	"necessity.items.notFound": "O item não foi encontrado",
 	"product.invalidProductType": "productType deve estar contido em [1,2]",
 	"product.codeNotunique": "O campo 'code' não pode conter um valor duplicado",
-	"produto.addChildren.circularDependencies" : "Dependencias circulares"
+	"produto.addChildren.circularDependencies": "Dependencias circulares"
 }

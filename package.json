@@ -47,6 +47,6 @@
     "supertest": "^3.0.0"
   },
   "scripts": {
-    "test": "mocha -t 5000"
+    "test": "mocha -t 100000"
   }
 }

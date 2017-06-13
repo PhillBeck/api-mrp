@@ -7,7 +7,7 @@ var mongoose = require('mongoose'),
 
 
 var NecessityItemSchema = new Schema({
-	productId: {type: Schema.Types.ObjectId, ref: 'Produto', required: true},
+	productId: {type: Schema.Types.ObjectId, ref: 'produto', required: true},
 	quantity:  {type: Number, required: true},
 	deadline:  {type: Date}
 });
@@ -21,7 +21,7 @@ var NecessitySchema = new Schema({
 NecessitySchema.plugin(mongoosePaginate);
 NecessitySchema.plugin(mongooseAggregatePaginate);
 
-var necessity = mongoose.model('Necessity', NecessitySchema);
+var necessity = mongoose.model('necessity', NecessitySchema);
 
 module.exports = {
 	Necessity : necessity

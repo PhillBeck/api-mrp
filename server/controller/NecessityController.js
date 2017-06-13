@@ -7,7 +7,8 @@ var Joi = require('joi'),
 	Product = require('../model/ProdutoModel').Produto,
 	async = require('async'),
 	_ = require('lodash'),
-	mongoose = require('mongoose');
+	mongoose = require('mongoose'),
+	log = require('../utils/log');
 Joi.objectId = require('joi-objectid')(Joi);
 
 mongoose.Promise = require('q').Promise;
@@ -32,6 +33,8 @@ exports.createNecessity = {
 						var ret = shallowClone(doc);
 						delete ret.__v;
 						delete ret.items;
+						delete ret.createdAt;
+						delete ret.updatedAt;
 						return reply(ret).created('/necessities/' + doc._id);
 					}
 
@@ -63,7 +66,7 @@ exports.getNecessities = {
 	},
 	handler: function(request, reply) {
 		httpTools.searchQuery(null, request.query, null, function(search, filters) {
-			filters.select = '-items -__v';
+			filters.select = '-items -__v -createdAt -updatedAt';
 			Necessity.paginate(search, filters, function(err, doc) {
 				if (!err) {
 					return reply(doc);
@@ -113,7 +116,7 @@ exports.updateNecessity = {
 						if (numAffected.nModified != 0) {
 							return reply().code(204);
 						}
-						return reply(Boom.notFound(request.i18n.__("necessity.notFound")));
+						return reply(Boom.notFound(request.i18n.__( "necessity.notFound" )));
 					}
 
 					console.log(err);
@@ -123,7 +126,7 @@ exports.updateNecessity = {
 			else {
 				switch (e.error) {
 					case 404:
-						return reply(Boom.notFound(request.i18n.__("necessity.productNotFoundList") + e.message));
+						return reply(Boom.notFound(request.i18n.__( "necessity.productNotFoundList" ) + e.message));
 						break;
 					default:
 						console.log(e);
@@ -141,13 +144,13 @@ exports.getNecessityById = {
 		}
 	},
 	handler: function(request, reply) {
-		Necessity.findById(request.params.necessityId).select('-items -__v').exec(function(err, doc) {
+		Necessity.findById(request.params.necessityId).select('-items -__v -createdAt -updatedAt').exec(function(err, doc) {
 			if (!err) {
 				if (doc) {
 					return reply(doc);
 				}
 
-				return reply(Boom.notFound(request.i18n.__("request.notFound")));
+				return reply(Boom.notFound(request.i18n.__("necessity.notFound")));
 			}
 
 			console.log(err);
@@ -182,7 +185,7 @@ exports.getItemsByNecessityId = {
 				if (!err) {
 					if (doc.length === 0)
 					{
-						return reply(Boom.notFound(request.i18n.__("necessity.notFound")));
+						return reply(Boom.notFound(request.i18n.__( "necessity.notFound" )));
 					}
 
 					Necessity.aggregate([
@@ -191,13 +194,18 @@ exports.getItemsByNecessityId = {
 						{$unwind: "$items"},
 						{$skip: options.skip},
 						{$limit: options.limit},
+						{$lookup: {
+							from: "produto",
+							localField: "items.productId",
+							foreignField: "_id",
+							as: "produto"
+						}},
 						{$group: {
 							_id: null,
 							docs: {$push: "$items"}
 						}},
 						{$project: {_id: 0}}
-						]
-						,function(e, docs) {
+						], function(e, docs) {
 							if (e) {
 								console.log(e);
 								return reply(Boom.badImplementation());
@@ -280,7 +288,7 @@ exports.addItem = {
 								});
 							}
 							else {
-								return reply(Boom.notFound(request.i18n.__("necessity.notFound")));
+								return reply(Boom.notFound(request.i18n.__( "necessity.notFound" )))
 							}
 						}
 						else {
@@ -290,7 +298,7 @@ exports.addItem = {
 					});
 				}
 				else {
-					return reply(Boom.notFound(request.i18n.__("necessity.productNotFound")));
+					return reply(Boom.notFound(request.i18n.__( "necessity.productNotFound" )));
 				}
 			}
 			else {
@@ -316,7 +324,7 @@ exports.removeItem = {
 					var item = doc.items.id(request.params.itemId);
 
 					if (!item) {
-						return reply(Boom.notFound(request.i18n.__("necessity.items.notFound")));
+						return reply(Boom.notFound(request.i18n.__( "necessity.items.notFound" )));
 					}
 
 					item.remove();
@@ -372,11 +380,11 @@ exports.updateItem = {
 						});
 					}
 					else {
-						return reply(Boom.notFound(request.i18n.__("necessity.items.notFound")));
+						return reply(Boom.notFound(request.i18n.__( "necessity.items.notFound" )));
 					}
 				}
 				else {
-					return reply(Boom.notFound(request.i18n.__("necessity.notFound")));
+					return reply(Boom.notFound(request.i18n.__( "necessity.notFound" )));
 				}
 			}
 			else {
@@ -403,13 +411,13 @@ exports.getMaterials = {
 		Necessity.findById(request.params.necessityId, function(err, doc) {
 			if (!err) {
 				if (doc) {
-					if (!doc.items || !(doc.items.length >0)) {
+					if (!doc.items || !(doc.items.length > 0)) {
 						return reply([]);
 					}
 						calculateMaterials(doc, reply);
 				}
 				else {
-					return reply(Boom.notFound(request.i18n.__("necessity.notFound")));
+					return reply(Boom.notFound(request.i18n.__( "necessity.notFound" )));
 				}
 			}
 			else {
@@ -447,16 +455,29 @@ function calculateMaterials(necessity, reply) {
 		});
 	}, function(err, results) {
 
-		let aux = _.flatten(results);
-		let ret = groupObjectArrayBy(aux, '_id', function(element, acumulator) {
+		let flattenedResults = _.flatten(results);
+		let groupedResults = groupObjectArrayBy(flattenedResults, '_id', function(element, acumulator) {
 			if (acumulator && acumulator.quantity) {
 				acumulator.quantity += element.quantity;
 				return acumulator;
 			}
 			return element;
-		})
-		return reply(ret);
+		});
+
+		return reply(formatMaterialOutput(groupedResults, ['__v', 'relationships', 'DELETED', 'relationProperties']));
 	});
+}
+
+function formatMaterialOutput(products, exclude) {
+	var obj = products.map(item => {
+		let ret = shallowClone(item);
+
+		exclude.forEach(field => {delete ret[field]});
+
+		return ret;
+	});
+
+	return obj;
 }
 
 function prepareMaterialsArray(product, currentQuantity, array) { 
