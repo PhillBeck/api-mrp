@@ -66,11 +66,11 @@ function run(depth, numItems, done) {
 			});
 		}
 		], function(err, res) {
-			var timer = console.time('time');
+			var timer = console.time(depth + ' ' +  numItems);
 			request(server.listener)
-			.get('/necessities/' + necessityId + '/materials?_redirectUri=1&_code=1')
+			.get('/necessities/' + necessityId + '/materials')
 			.end(function(err, res) {
-				console.timeEnd('time');
+				console.timeEnd(depth + ' ' +  numItems);
 				done();
 			});
 		}

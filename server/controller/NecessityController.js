@@ -401,9 +401,7 @@ exports.getMaterials = {
 			necessityId: Joi.objectId().required()
 		},
 		query: {
-			_search: Joi.string(),
-			_redirectUri: Joi.string().required(),
-			_code: Joi.string().required()
+			_search: Joi.string()
 		}
 	},
 	handler: function(request, reply) {

@@ -305,7 +305,7 @@ exports.run = function(server) {
 
 		it('should get Materials', function(done) {
 			request(server.listener)
-			.get('/necessities/' + necessityId + '/materials?_redirectUri=1&_code=1')
+			.get('/necessities/' + necessityId + '/materials')
 			.end(function(err, res) {
 				expect(res.body).to.have.length(100);
 				done();
