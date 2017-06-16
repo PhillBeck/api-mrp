@@ -1,95 +1,26 @@
+'use strict';
+
 const async = require('async'),
-	  request = require('supertest'),
-	  server = require('../server/server'),
-	  config = require('./config');
+	  tests = require('./performance2');
 
-const depthStep = 10;
-const depthMin = 10;
-const depthMax = 100;
+var depthMin = 100;
+var depthMax = 1000;
+var depthStep = 50;
 
+var itemsMin = 100;
+var itemsMax = 1000;
+var itemsStep = 50;
 
-const itemsStep = 10;
-const itemsMin = 10;
-const itemsMax = 100;
+setTimeout(function() {
 
-async.timesSeries(Math.round((depthMax - depthMin) / depthStep), function(n, done) {
-
-	async.timesSeries(Math.round((itemsMax - itemsMin) / itemsStep), function(m, next) {
-		run(depthMin + n * depthStep, itemsMin + m * itemsStep, next);
+async.timesSeries(Math.ceil((itemsMax - itemsMin)/itemsStep + 1), function(n, next) {
+	async.timesSeries(Math.ceil((depthMax - depthMin) / depthStep + 1), function(m, callback) {
+		tests(depthMin + m * depthStep, itemsMin + n * itemsStep, callback);
 	}, function(err, docs) {
-		done();
-	})
-
+		next();
+	});
 }, function(err, docs) {
-	process.exit(0)
+	process.exit(0);
 });
 
-function run(depth, numItems, done) {
-
-	var numProducts = depth * numItems;
-	var products = [];
-	var necessityId;
-
-	async.series([
-		function(next) {
-			async.times(numProducts, function(n, callback) {
-				request(server.listener)
-				.post('/products')
-				.send(new config.Product())
-				.end(function(err, res) {
-					callback(err, res.body);
-				});
-			}, function(err, docs) {
-				products = docs;
-				next();
-			});
-		},
-		function(next) {
-			request(server.listener)
-			.post('/necessities')
-			.send({name: 'test', description: 'test'})
-			.end(function(err, res) {
-				necessityId = res.body._id;
-				next();
-			});
-		},
-		function(next) {
-			async.times(numItems, function(n, callback) {
-				request(server.listener)
-				.post('/necessities/' + necessityId + '/items')
-				.send({productId: products[n*depth]._id, quantity: 1, deadline: '2017-06-30'})
-				.end(function(err, res) {
-					callback();
-				});
-			}, function(err, docs) {
-				next();
-			});
-		}
-		, function(next) {
-			async.times(numItems, function(n, callback) {
-				async.times(depth-1, function(m, back) {
-					request(server.listener)
-					.put('/products/' + products[n*m]._id + '/children/' + products[n*m+1]._id)
-					.send({quantity: 1})
-					.end(function(err, res) {
-						back(err, res.statusCode);
-					});
-				}, function(err, docs) {
-					callback(err, docs);
-				});
-			}, function(err, docs) {
-				console.log(necessityId);
-				next();
-			});
-		}
-		], function(err, res) {
-			var timer = console.time(depth + ' ' +  numItems);
-			request(server.listener)
-			.get('/necessities/' + necessityId + '/materials')
-			.end(function(err, res) {
-				console.timeEnd(depth + ' ' +  numItems);
-				done();
-			});
-		}
-	);
-}
+}, 20000);

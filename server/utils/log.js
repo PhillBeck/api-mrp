@@ -1,7 +1,10 @@
 'use strict';
 
 const bunyan = require('bunyan'),
-	  mongoStream = require('mongo-writable-stream');
+	  mongoStream = require('mongo-writable-stream'),
+	  dbUrl = require('../config/db').logDB;
+
+console.log(dbUrl)
 
 var product = {
 	logger: bunyan.createLogger({
@@ -14,13 +17,13 @@ var product = {
 			},
 			{
 				stream: new mongoStream({
-					url:'mongodb://localhost/umaflex-log',
+					url: dbUrl,
 					collection: 'errors'
 				})
 			},
 			{
 				stream: new mongoStream({
-					url: 'mongodb://localhost/umaflex-log',
+					url: dbUrl,
 					collection: 'warnings'
 				})
 			}

@@ -4,8 +4,6 @@ ADD . /
 
 EXPOSE 9002
 
-RUN npm install -g nodemon
-
 RUN npm install
 
-CMD npm run test
+CMD node server/server.js

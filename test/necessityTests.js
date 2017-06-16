@@ -307,8 +307,12 @@ exports.run = function(server) {
 			request(server.listener)
 			.get('/necessities/' + necessityId + '/materials')
 			.end(function(err, res) {
-				expect(res.body).to.have.length(100);
-				done();
+				request(server.listener)
+				.get(res.headers.location)
+				.end(function(err, res) {
+					expect(res.body.docs).to.have.length(15);
+					done();
+				});
 			});
 		});
 	});

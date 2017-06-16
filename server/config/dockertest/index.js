@@ -6,7 +6,7 @@ module.exports = {
 		port: 9002
 	},
 	database: {
-		host: 'localhost',
+		host: 'mongo',
 		port: 27017,
 		db: 'umaflex',
 		username: '',
@@ -15,7 +15,7 @@ module.exports = {
 
 	},
 	neo4j: {
-		connectURI: 'bolt://localhost',
+		connectURI: 'bolt://neo4j',
 		user: 'neo4j',
 		password: 'q1w2e3www'
 	}

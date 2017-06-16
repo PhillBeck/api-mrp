@@ -11,5 +11,7 @@ db.once('open', function callback() {
 	console.log("Connection with MongoDb succeeded.");
 });
 
+exports.logDB = 'mongodb://' + config.database.host + '/' + config.database.log;
+
 exports.Mongoose = Mongoose;
 exports.db = db;

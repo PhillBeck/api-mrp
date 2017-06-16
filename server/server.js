@@ -1,3 +1,5 @@
+setTimeout(function() {
+
 var Hapi = require('hapi'),
 	Routes = require('./routes'),
 	Db = require('./config/db'),
@@ -44,7 +46,7 @@ var plugins = [
 				name: 'ServerLogger',
 				level: 'debug',
 				stream: new mongoStream({
-					url: 'mongodb://localhost/umaflex-log',
+					url: 'mongodb://mongo/umaflex-log',
 					collection: 'hapi'
 				})
 			}),
@@ -64,3 +66,4 @@ server.start(function () {
 });
 
 module.exports = server;
+}, 10000);
