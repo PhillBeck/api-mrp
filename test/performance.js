@@ -8,7 +8,7 @@ var depthMax = 1000;
 var depthStep = 50;
 
 var itemsMin = 100;
-var itemsMax = 1000;
+var itemsMax = 2000;
 var itemsStep = 50;
 
 setTimeout(function() {
