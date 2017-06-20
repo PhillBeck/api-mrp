@@ -16,7 +16,7 @@ var ProdutoSchema = new Schema({
   code:          {type: String, required: true, unique: true},
   name:          {type: String, required: true},
   family:        {type: String},
-  productType:   {type: Number},
+  productType:   {type: Number}, //1 for bought, 2 for manufatured
   description:   {type: String},
   amountInStock: {type: Number},
   unit:          {type: String},

@@ -7,8 +7,13 @@ var Joi = require('joi'),
 	mongoose = require('mongoose'),
 	uuidV4 = require('uuid/v4'),
 	_ = require('lodash'),
+	async = require('async'),
 	formatOutput = require('../utils/format'),
-	log = require('../utils/log').Product;
+	logFactory = require('../utils/log'),
+	productionOrderModel = require('../model/productionOrderModel'),
+	necessityModel = require('../model/NecessityModel').Necessity,
+
+	log = new logFactory.createLogger('ProductController');
 
 mongoose.Promise = require('q').Promise;
 Joi.objectId = require('joi-objectid')(Joi);
@@ -43,7 +48,7 @@ const productPayloadValidate = {
 	unit:          Joi.string(),
 	leadTime:      Joi.number(),
 	purchasePrice: Joi.number(),
-	_id: 		   Joi.string() 
+	_id: 		   Joi.string()
 }
 
 exports.create = {
@@ -89,25 +94,44 @@ exports.remove = {
 	},
 	handler: function(request, reply) {
 
-		var config = new DocNode();
+		validateDelete(request.params._id, function(err) {
 
-		config.document._id = request.params._id;
+			if (err) {
+				switch (err.error) {
+					case 'productionOrderValidationError':
+						return reply(Boom.badData(request.i18n.__("product.delete.productionOrderReference")));
+						break;
+					case 'necessityValidationError':
+						return reply(Boom.badData(request.i18n.__("product.delete.necessityReference")));
+						break;
+					case 'structureValidationError':
+						return reply(Boom.badData(request.i18n.__("product.delete.structureReference")));
+						break;
+					default:
+						log.error(request, err);
+						return reply(Boom.badImplementation());
+				}
+			}
 
-		Produto.softDeleteDocNode(config, function(err, doc) {
-			if (!err) {
-				reply().code(204);
-				return;
-			}
-			
-			switch (err.error) {
-				case 'notFound':
-					return reply(Boom.notFound(request.i18n.__("product.notFound")));
-					break;
-				default:
-					log.error(request, err);
-					return reply(Boom.badImplementation());
-			}
-		})
+			var config = new DocNode();
+			config.document._id = request.params._id;
+
+			Produto.softDeleteDocNode(config, function(err) {
+				if (!err) {
+					reply().code(204);
+					return;
+				}
+
+				switch (err.error) {
+					case 'notFound':
+						return reply(Boom.notFound(request.i18n.__("product.notFound")));
+						break;
+					default:
+						log.error(request, err);
+						return reply(Boom.badImplementation());
+				}
+			});
+		});
 	}
 };
 
@@ -350,6 +374,90 @@ function validateChildren(parentId, childId, callback) {
 	});
 }
 
+function validateDelete(id, callback) {
+	async.parallel([
+		validateProductionOrder.bind(null, id),
+		validateNecessity.bind(null, id),
+		validateStructure.bind(null, id)
+	], function(err) {
+		callback(err);
+	});
+}
+
+function validateProductionOrder(id, callback) {
+	productionOrderModel.count(
+		{ productId: id, DELETED: false }
+		, function(err, count) {
+			if (err) {
+				return callback({error: 'mongoError', message: err}, null);
+			}
+
+			if (count > 0) {
+				let error = {
+					error: 'productionOrderValidationError',
+					message: ''
+				};
+				return callback(error, null);
+			}
+
+			return callback(null, null);
+		}
+	);
+}
+
+function validateNecessity(id, callback) {
+	necessityModel.count(
+		{ 'items.productId': mongoose.Types.ObjectId(id) }
+		, function(err, count) {
+			if (err) {
+				return callback({error: 'mongoError', message: err}, null);
+			}
+
+			if (count > 0) {
+				let error = {
+					error: 'necessityValidationError',
+					message: ''
+				};
+				return callback(error, null);
+			}
+
+			return callback(null, null);
+		}
+	);
+}
+
+function validateStructure(id,callback) {
+	let searchConfig = {
+		depth: 1,
+		direction: '>',
+		recordsPerPage: 10,
+		page: 0,
+		document : {}
+	};
+
+	searchConfig.document._id = id;
+
+	Produto.getRelationships(searchConfig, function(err, obj) {
+		if (err) {
+			if (err.error === 'notFound') {
+				return callback(null, null);
+			}
+			return callback(err);
+		}
+
+		if (obj.docs.relationships) {
+			let error ={
+				error: 'structureValidationError',
+				message: ''
+			}
+
+			return callback(error, null);
+		}
+
+		return callback(null, null);
+	});
+}
+
 function extractTreeData(obj) {
 
 	var ret = {};
@@ -368,8 +476,6 @@ function extractTreeData(obj) {
 	}
 	return ret;
 }
-
-
 
 function arrayObjectIndexOf(myArray, searchTerm, property) {
 	for(var i = 0, len = myArray.length; i < len; i++) {

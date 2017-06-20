@@ -1,5 +1,3 @@
-setTimeout(function() {
-
 var Hapi = require('hapi'),
 	Routes = require('./routes'),
 	Db = require('./config/db'),
@@ -46,7 +44,7 @@ var plugins = [
 				name: 'ServerLogger',
 				level: 'debug',
 				stream: new mongoStream({
-					url: 'mongodb://mongo/umaflex-log',
+					url: Db.logDB,
 					collection: 'hapi'
 				})
 			}),
@@ -65,5 +63,15 @@ server.start(function () {
 	console.log('Server started ', server.info.uri);
 });
 
+server.ext('onPreResponse', function (request, reply) {
+    var response = request.response;
+    if (!response.isBoom) {
+        return reply.continue();
+    }
+    if (response.data){
+        response.output.payload.data = response.data;
+    }
+    return reply(response);
+});
+
 module.exports = server;
-}, 10000);

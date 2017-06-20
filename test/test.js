@@ -6,7 +6,9 @@ const assert = require('assert'),
 	request = require('supertest'),
 	server = require('../server/server'),
 	productTests = require('./productTests'),
-	necessityTests = require('./necessityTests');
+	necessityTests = require('./necessityTests'),
+	productionOrderTests = require('./productionOrderTests');
 
 productTests.run(server);
 necessityTests.run(server);
+productionOrderTests.run(server);

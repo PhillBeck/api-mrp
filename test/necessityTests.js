@@ -255,7 +255,7 @@ exports.run = function(server) {
 		before(function(done) {
 			async.series([
 				function(next) {
-					async.times(100, function(n, callback) {
+					async.times(10, function(n, callback) {
 						request(server.listener)
 						.post('/products')
 						.send(new config.Product())
@@ -277,7 +277,7 @@ exports.run = function(server) {
 					});
 				},
 				function(next) {
-					async.times(100, function(n, callback) {
+					async.times(10, function(n, callback) {
 						request(server.listener)
 						.post('/necessities/' + necessityId + '/items')
 						.send({productId: products[n]._id, quantity: 1, deadline: '2017-06-30'})
@@ -289,7 +289,7 @@ exports.run = function(server) {
 					});
 				}
 			], function(err, res) {
-				async.times(99, function(n, callback) {
+				async.times(9, function(n, callback) {
 					request(server.listener)
 					.put('/products/' + products[n]._id + '/children/' + products[n+1]._id)
 					.send({quantity: 1})
@@ -297,7 +297,6 @@ exports.run = function(server) {
 						callback(err, res.statusCode);
 					});
 				}, function(err, docs) {
-					console.log(necessityId);
 					done();
 				});
 			});
@@ -310,7 +309,7 @@ exports.run = function(server) {
 				request(server.listener)
 				.get(res.headers.location)
 				.end(function(err, res) {
-					expect(res.body.docs).to.have.length(15);
+					expect(res.body.docs).to.have.length(10);
 					done();
 				});
 			});

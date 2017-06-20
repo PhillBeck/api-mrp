@@ -8,5 +8,11 @@
 	"necessity.items.notFound": "O item não foi encontrado",
 	"product.invalidProductType": "productType deve estar contido em [1,2]",
 	"product.codeNotunique": "O campo 'code' não pode conter um valor duplicado",
-	"produto.addChildren.circularDependencies": "Dependencias circulares"
+	"produto.addChildren.circularDependencies": "Dependencias circulares",
+	"productionOrder.codeNotUnique": "O campo 'code' não pode conter um valor duplicado",
+	"productionOrder.productNotFound": "O produto não foi encontrado",
+	"productionOrder.notFound": "Ordem de Produção não encontrada",
+	"product.delete.productionOrderReference": "O produto não pode ser excluído pois é referenciado em ordens de produção",
+	"product.delete.necessityReference": "O produto não pode ser excluído pois é referenciado em necessidades",
+	"product.delete.structureReference": "O producto não pode ser excluído pois é referenciado na estrutura de outros produtos"
 }

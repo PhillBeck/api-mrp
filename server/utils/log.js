@@ -6,12 +6,12 @@ const bunyan = require('bunyan'),
 
 console.log(dbUrl)
 
-var product = {
-	logger: bunyan.createLogger({
-			name: 'ProductController',
-			serializers: {err: errorDataSerializer},
-			level: 'error',
-			streams: [
+function createlogger(name) {
+	this.logger = bunyan.createLogger({
+		name: name,
+		serializers: {err: errorDataSerializer},
+		level: 'error',
+		streams: [
 			{
 				stream: process.stderr
 			},
@@ -27,9 +27,8 @@ var product = {
 					collection: 'warnings'
 				})
 			}
-			]
-		}),
-	error: error
+		]});
+	this.error= error
 }
 
 function error(req, err) {
@@ -69,6 +68,4 @@ function errorDataSerializer (obj) {
 	return ret;
 };
 
-module.exports = {
-	Product: product
-}
+module.exports = {createLogger: createlogger}

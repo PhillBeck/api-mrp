@@ -35,7 +35,7 @@ exports.run = function(server) {
 				it('Missing code - Should return 400', function(done) {
 					let testProduct = new config.Product();
 					delete testProduct.code;
-					
+
 					request(server.listener)
 					.post('/products')
 					.send(testProduct)
@@ -49,7 +49,7 @@ exports.run = function(server) {
 				it('Missing name - Should return 400', function(done) {
 					let testProduct = new config.Product();
 					delete testProduct.name;
-					
+
 					request(server.listener)
 					.post('/products')
 					.send(testProduct)
@@ -62,7 +62,7 @@ exports.run = function(server) {
 
 				it('Not unique code - Should return 422', function(done) {
 					var testProduct = new config.Product();
-					
+
 					request(server.listener)
 					.post('/products')
 					.send(testProduct)
@@ -84,7 +84,7 @@ exports.run = function(server) {
 				it('Invalid productType - Should return 422', function(done) {
 					let testProduct = new config.Product();
 					testProduct.productType = 3;
-					
+
 					request(server.listener)
 					.post('/products')
 					.send(testProduct)
@@ -219,7 +219,7 @@ exports.run = function(server) {
 
 			describe('Valid input', function() {
 
-				it('Should Update', function() {
+				it('Should Update', function(done) {
 					testProduct.name = 'updatedName';
 
 					request(server.listener)
@@ -278,9 +278,9 @@ exports.run = function(server) {
 					.delete('/products/' + testProduct._id)
 					.end(function(err, res) {
 						if (err) return done(err);
-						
+
 						expect(res.statusCode).to.equal(204);
-						
+
 						request(server.listener)
 						.get('/products/' + testProduct._id)
 						.end(function(err,res) {
@@ -295,15 +295,15 @@ exports.run = function(server) {
 
 			describe('Invalid Input', function() {
 
-				var testProduct = new config.Product();
+				var testProduct = [];
 
-				before(function(done) {
+				beforeEach(function(done) {
 					request(server.listener)
 					.post('/products')
-					.send(testProduct)
+					.send(new config.Product())
 					.end(function(err, res) {
 						if (err) return done(err);
-						testProduct = res.body
+						testProduct.push(res.body);
 						done();
 					});
 				});
@@ -319,13 +319,13 @@ exports.run = function(server) {
 
 				it('Double delete - should return 404', function(done) {
 					request(server.listener)
-					.delete('/products/' + testProduct._id)
+					.delete('/products/' + testProduct[0]._id)
 					.end(function(err, res) {
 						if (err) return done(err);
 						expect(res.statusCode).to.equal(204);
 
 						request(server.listener)
-						.delete('/products/' + testProduct._id)
+						.delete('/products/' + testProduct[0]._id)
 						.end(function(err, res) {
 							if (err) return done(err);
 							expect(res.statusCode).to.equal(404);
@@ -333,11 +333,71 @@ exports.run = function(server) {
 						});
 					});
 				});
+
+				it('Product referenced by ProductionOrder - should return 422', function(done) {
+					request(server.listener)
+					.post('/productionOrders')
+					.send(new config.ProductionOrder(testProduct[1]._id))
+					.end(function(err, res) {
+						var productionOrderId = res.body._id;
+						request(server.listener)
+						.delete('/products/' + testProduct[1]._id)
+						.end(function(err, res) {
+							expect(res.statusCode).to.equal(422);
+							expect(res.body.message).to.contain(messages["product.delete.productionOrderReference"]);
+							done(err);
+						});
+					});
+				});
+
+				it('Product referenced by Necessity - should return 422', function(done) {
+					async.waterfall([
+						function(callback) {
+							request(server.listener)
+							.post('/necessities')
+							.send({name: 'test', description:'test'})
+							.end(function(err, res){
+								callback(err, res.body._id);
+							});
+						},
+						function(necessityId, callback) {
+							request(server.listener)
+							.post(`/necessities/${necessityId}/items`)
+							.send({quantity: 1, deadline: '2017-06-30', productId: testProduct[2]._id })
+							.end(function(err, res) {
+									callback(err, undefined)
+							});
+						}
+					], function(err) {
+						request(server.listener)
+						.delete('/products/' + testProduct[2]._id)
+						.end(function(err, res) {
+							expect(res.statusCode).to.equal(422);
+							expect(res.body.message).to.contain(messages["product.delete.necessityReference"]);
+							done(err);
+						});
+					});
+				});
+
+				it('Product used in other products - should return 422', function(done) {
+					request(server.listener)
+					.put(`/products/${testProduct[3]._id}/children/${testProduct[4]._id}`)
+					.send({quantity: 1})
+					.end(function(err, res) {
+						request(server.listener)
+						.delete(`/products/${testProduct[4]._id}`)
+						.end(function(err, res) {
+							expect(res.statusCode).to.equal(422);
+							expect(res.body.message).to.eql(messages["product.delete.structureReference"]);
+							done(err);
+						});
+					});
+				});
 			});
 		});
 
 		describe('Add children', function() {
-			
+
 			var testProducts = [];
 
 			before(function(done) {
@@ -363,7 +423,7 @@ exports.run = function(server) {
 					.end(function(err, res) {
 						if (err) return done(err);
 						expect(res.statusCode).to.equal(204);
-						
+
 						request(server.listener)
 						.get('/products/' + testProducts[0]._id + '/children')
 						.end(function(err, res) {
@@ -559,22 +619,6 @@ exports.run = function(server) {
 						expect(tree.children[0].data.quantity).to.be.oneOf([1,2]);
 						expect(tree.children[0].data._id).to.be.oneOf([testProducts[1]._id, testProducts[2]._id])
 						done();
-					});
-				});
-
-				it('Softdeleted son - should return correct tree', function(done) {
-					request(server.listener)
-					.delete('/products/' + testProducts[3]._id)
-					.end(function(err, res) {
-						request(server.listener)
-						.get('/products/' + testProducts[1]._id + '/children')
-						.end(function(err, res) {
-							let tree = res.body[0];
-							expect(tree.children).to.have.length(1);
-							expect(tree.text).to.eql(testProducts[1].code + ' - ' + testProducts[1].name)
-							expect(tree.children[0].children).to.have.length(1);
-							done();
-						});
 					});
 				});
 			});

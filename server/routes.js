@@ -1,10 +1,11 @@
 // Load modules
-var Produto = require('./controller/ProdutoController');
-var Necessity = require('./controller/NecessityController');
+var Produto = require('./controller/ProdutoController'),
+    Necessity = require('./controller/NecessityController'),
+    ProductionOrder = require('./controller/productionOrderController');
 
 // API Server Endpoints
 exports.endpoints = [
-  { 
+  {
   	method: 'post',
   	path: '/products',
   	config: Produto.create
@@ -17,7 +18,7 @@ exports.endpoints = [
   {
   	method: 'get',
   	path: '/products',
-  	config: Produto.getProducts 
+  	config: Produto.getProducts
   },
   {
     method: 'get',
@@ -98,5 +99,30 @@ exports.endpoints = [
     method: 'get',
     path: '/materials/{_id}',
     config: Necessity.getMaterials
+  },
+  {
+    method: 'post',
+    path: '/productionOrders',
+    config: ProductionOrder.createOrder
+  },
+  {
+    method: 'get',
+    path: '/productionOrders',
+    config: ProductionOrder.listOrders
+  },
+  {
+    method: 'get',
+    path: '/productionOrders/{orderId}',
+    config: ProductionOrder.getOrderById
+  },
+  {
+    method: 'put',
+    path: '/productionOrders/{orderId}',
+    config: ProductionOrder.updateOrder
+  },
+  {
+	method: 'delete',
+	path: '/productionOrders/{orderId}',
+	config: ProductionOrder.deleteOrder
   }
 ];
