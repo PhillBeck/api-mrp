@@ -20,19 +20,10 @@ services:
     ports:
       - '9002:9002'
     environment:
-        - NODE_ENV=dockertest
+        - NODE_ENV=production
     depends_on:
       - mongo
       - neo4j
     links:
       - mongo
       - neo4j
-
-  performance:
-    build: ./test
-    links:
-      - app
-    volumes:
-      - /log:/log
-    depends_on:
-      - app

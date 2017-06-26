@@ -8,7 +8,7 @@
 	"necessity.items.notFound": "O item não foi encontrado",
 	"product.invalidProductType": "productType deve estar contido em [1,2]",
 	"product.codeNotunique": "O campo 'code' não pode conter um valor duplicado",
-	"produto.addChildren.circularDependencies": "Dependencias circulares",
+	"produto.addChildren.circularDependencies": "O produto filho já é utilizado em um nível superior",
 	"productionOrder.codeNotUnique": "O campo 'code' não pode conter um valor duplicado",
 	"productionOrder.productNotFound": "O produto não foi encontrado",
 	"productionOrder.notFound": "Ordem de Produção não encontrada",

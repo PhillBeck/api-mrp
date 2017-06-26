@@ -486,7 +486,7 @@ exports.run = function(server) {
 						.end(function(err, res) {
 							if (err) return done(err);
 							expect(res.statusCode).to.equal(422);
-							expect(res.body.message).to.contain('circular');
+							expect(res.body.message).to.eql(messages["produto.addChildren.circularDependencies"]);
 							done();
 						});
 					});
