@@ -22,7 +22,8 @@ const orderPayloadValidate = {
 	originalDeadline: Joi.date().iso().required(),
 	revisedDeadline:  Joi.date().iso(),
 	type:             Joi.number().valid([1, 2]).required(),
-	salesOrderId:     Joi.objectId()
+	salesOrderId:     Joi.objectId(),
+  status:           Joi.number().valid([0, 1, 2])
 }
 
 exports.createOrder = {
