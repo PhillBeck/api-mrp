@@ -24,7 +24,7 @@ services:
   app:
     build: .
     ports:
-      - '9000:9000'
+      - '9002:9000'
     environment:
       - NODE_ENV=production
     restart: always
