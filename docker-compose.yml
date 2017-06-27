@@ -5,12 +5,18 @@ services:
     image: mongo:3.4
     ports:
       - '27017'
+    volumes:
+      - /data/mongo/db:/data/db
+    restart: always
     command: mongod --quiet
 
   neo4j:
     image: neo4j:3.2
     environment:
       - NEO4J_AUTH=none
+    volumes:
+      - /data/neo4j:/data
+    restart: always
     ports:
       - '7474'
       - '7687'
@@ -18,9 +24,10 @@ services:
   app:
     build: .
     ports:
-      - '9002:9002'
+      - '9000:9000'
     environment:
-        - NODE_ENV=production
+      - NODE_ENV=production
+    restart: always
     depends_on:
       - mongo
       - neo4j
