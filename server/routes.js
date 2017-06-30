@@ -1,7 +1,8 @@
 // Load modules
 var Produto = require('./controller/ProdutoController'),
     Necessity = require('./controller/NecessityController'),
-    ProductionOrder = require('./controller/productionOrderController');
+    ProductionOrder = require('./controller/productionOrderController'),
+    WarehouseController = require('./controller/WarehouseController');
 
 // API Server Endpoints
 exports.endpoints = [
@@ -124,5 +125,30 @@ exports.endpoints = [
 	method: 'delete',
 	path: '/productionOrders/{orderId}',
 	config: ProductionOrder.deleteOrder
+  },
+  {
+    method: 'post',
+    path: '/warehouses',
+    config: WarehouseController.createWarehouse
+  },
+  {
+    method: 'get',
+    path: '/warehouses',
+    config: WarehouseController.listWarehouses
+  },
+  {
+    method: 'get',
+    path: '/warehouses/{warehouseId}',
+    config: WarehouseController.getWarehouseById
+  },
+  {
+    method: 'put',
+    path: '/warehouses/{warehouseId}',
+    config: WarehouseController.updateWarehouse
+  },
+  {
+	method: 'delete',
+	path: '/warehouses/{warehouseId}',
+	config: WarehouseController.deleteWarehouse
   }
 ];

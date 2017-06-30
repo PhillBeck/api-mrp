@@ -7,8 +7,10 @@ const assert = require('assert'),
 	server = require('../server/server'),
 	productTests = require('./productTests'),
 	necessityTests = require('./necessityTests'),
-	productionOrderTests = require('./productionOrderTests');
+	productionOrderTests = require('./productionOrderTests'),
+	warehouseTest = require('./warehouseTest');
 
-productTests.run(server);
-necessityTests.run(server);
-productionOrderTests.run(server);
+//productTests.run(server);
+//necessityTests.run(server);
+//productionOrderTests.run(server);
+warehouseTest.run(server);

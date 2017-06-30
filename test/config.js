@@ -19,5 +19,12 @@ module.exports = {
 		this.revisedDeadline = '2017-06-19';
 		this.quantity = 1;
 		this.type = 1;
+	},
+
+	Warehouse: function() {
+		this.code = Math.random().toString();
+		this.description = 'Teste';
+		this.validSince = '2017-06-19';
+		this.unitId = '59554026b0b92b74ba04a81d';
 	}
 }
