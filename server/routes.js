@@ -7,6 +7,13 @@ var Produto = require('./controller/ProdutoController'),
 // API Server Endpoints
 exports.endpoints = [
   {
+    method: 'get',
+    path: '/',
+    config: {handler: function(req, rep) {
+      rep({});
+    }}
+  },
+  {
   	method: 'post',
   	path: '/products',
   	config: Produto.create
