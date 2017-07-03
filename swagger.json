@@ -1,0 +1,1266 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Umaflex API",
+    "version": "0.0.1"
+  },
+  "host": "localhost:9002",
+  "schemes": [
+    "http"
+  ],
+  "basePath": "/",
+  "produces": [
+    "application/json"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "paths": {
+    "/products": {
+      "post": {
+        "summary": "Add new product",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Product to be added",
+            "schema": {
+              "$ref": "#/definitions/ProductRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Products"
+        ],
+        "responses": {
+          "200": {
+            "description": "The product object added",
+            "schema": {
+              "$ref": "#/definitions/ProductResponse"
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "schema": {
+              "$ref": "#/definitions/ValidationError"
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Lists products",
+        "description": "The endpoint adds a new product to the database\n",
+        "parameters": [
+          {
+            "name": "_page",
+            "in": "query",
+            "description": "Page number to return",
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "_limit",
+            "in": "query",
+            "description": "Number of maximum records per page",
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "_search",
+            "in": "query",
+            "description": "Filters to add to search",
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Products"
+        ],
+        "responses": {
+          "200": {
+            "description": "The product object added",
+            "schema": {
+              "$ref": "#/definitions/ProductResponse"
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "schema": {
+              "$ref": "#/definitions/ValidationError"
+            }
+          }
+        }
+      }
+    },
+    "/products/{id}": {
+      "get": {
+        "summary": "Find Product by ID",
+        "parameters": [
+          {
+            "name": "_page",
+            "in": "query",
+            "description": "Page number to return",
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "_limit",
+            "in": "query",
+            "description": "Number of maximum records per page",
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "_search",
+            "in": "query",
+            "description": "Filters to add to search",
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Products"
+        ],
+        "responses": {
+          "200": {
+            "description": "The product object added",
+            "schema": {
+              "$ref": "#/definitions/ProductResponse"
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "schema": {
+              "$ref": "#/definitions/ValidationError"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "Updates a product",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "description": "Product ot be updated",
+            "schema": {
+              "$ref": "#/definitions/ProductRequest"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Id of product to be updated",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Product Updated"
+          },
+          "400": {
+            "description": "Validation Error",
+            "schema": {
+              "$ref": "#/definitions/ValidationError"
+            }
+          },
+          "404": {
+            "description": "Product Not Found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "Deletes product",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Product Deleted"
+          },
+          "400": {
+            "description": "Validation Error",
+            "schema": {
+              "$ref": "#/definitions/ValidationError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/products/{parentId}/children": {
+      "parameters": [
+        {
+          "name": "parentId",
+          "required": true,
+          "in": "path",
+          "type": "string"
+        }
+      ],
+      "get": {
+        "summary": "Lists all children",
+        "tags": [
+          "Products"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/Structure"
+            }
+          }
+        }
+      }
+    },
+    "/products/{parentId}/children/{childId}": {
+      "parameters": [
+        {
+          "name": "parentId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "childId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "put": {
+        "summary": "Adds relationship beetween products",
+        "tags": [
+          "Products"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "quantity": {
+                  "type": "number",
+                  "format": "float"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Relationship Added"
+          },
+          "400": {
+            "description": "Validation Error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Removes relationship beetween products",
+        "tags": [
+          "Products"
+        ],
+        "responses": {
+          "204": {
+            "description": "Relationship Added"
+          },
+          "400": {
+            "description": "Validation Error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/necessities": {
+      "post": {
+        "summary": "Adds new necessity",
+        "tags": [
+          "Necessities"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Necessity to be added",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/NecessityRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The necessity object added",
+            "schema": {
+              "$ref": "#/definitions/NecessityResponse"
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "schema": {
+              "$ref": "#/definitions/ValidationError"
+            }
+          },
+          "404": {
+            "description": "Product not Found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Lists Necessities",
+        "tags": [
+          "Necessities"
+        ],
+        "parameters": [
+          {
+            "name": "_page",
+            "in": "query",
+            "description": "pagination parameter",
+            "type": "integer"
+          },
+          {
+            "name": "_limit",
+            "in": "query",
+            "description": "Maximum results per page",
+            "type": "integer"
+          },
+          {
+            "name": "_search",
+            "in": "query",
+            "description": "Filters to apply to search",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/NecessityResponse"
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "schema": {
+              "$ref": "#/definitions/ValidationError"
+            }
+          }
+        }
+      }
+    },
+    "/necessities/{necessityId}": {
+      "parameters": [
+        {
+          "name": "necessityId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "get": {
+        "summary": "Finds necessity by Id",
+        "tags": [
+          "Necessities"
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "schema": {
+              "$ref": "#/definitions/NecessityResponse"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deletes Necessity",
+        "tags": [
+          "Necessities"
+        ],
+        "responses": {
+          "204": {
+            "description": "Necessity was deleted"
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Updates Necessity",
+        "tags": [
+          "Necessities"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/NecessityRequest"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Necessity was updated"
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/necessities/{necessityId}/items": {
+      "parameters": [
+        {
+          "name": "necessityId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "post": {
+        "summary": "Adds new item to necessity",
+        "tags": [
+          "Necessities"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/NecessityItemRequest"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "schema": {
+              "$ref": "#/definitions/NecessityItemResponse"
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/necessities/{necessityId}/items/{itemId}": {
+      "parameters": [
+        {
+          "name": "necessityId",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "format": "ObjectId"
+        },
+        {
+          "name": "itemId",
+          "in": "path",
+          "required": true,
+          "type": "integer",
+          "format": "int32"
+        }
+      ],
+      "delete": {
+        "summary": "Removes item from necessity",
+        "tags": [
+          "Necessities"
+        ],
+        "responses": {
+          "204": {
+            "description": "Item was removed"
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Updates item in necessity",
+        "tags": [
+          "Necessities"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/NecessityItemRequest"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Item was updated"
+          },
+          "400": {
+            "description": "Validation Error",
+            "schema": {
+              "$ref": "#/definitions/ValidationError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/necessities/{necessityId}/materials": {
+      "parameters": [
+        {
+          "name": "necessityId",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "format": "ObjectId"
+        }
+      ],
+      "get": {
+        "summary": "get explosion of bill of materials for necessity",
+        "tags": [
+          "Necessities",
+          "Materials"
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok"
+          }
+        }
+      }
+    },
+    "/warehouses": {
+      "get": {
+        "summary": "get explosion of bill of materials for necessity",
+        "tags": [
+          "Warehouses"
+        ],
+        "parameters": [
+          {
+            "name": "_page",
+            "in": "query",
+            "description": "Page number to return",
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "_limit",
+            "in": "query",
+            "description": "Number of maximum records per page",
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "_search",
+            "in": "query",
+            "description": "Filters to add to search",
+            "type": "string"
+          }
+      ],
+       "responses": {
+          "200": {
+            "description": "Ok",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/WarehouseObject"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Insert new warehouse",
+        "tags": [
+          "Warehouses"
+        ],
+        "parameters": [
+           {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/WarehouseObject"
+            }
+          }
+      ],
+       "responses": {
+          "201": {
+            "description": "CREATED",
+            "schema": {
+              "$ref": "#/definitions/WarehouseObject"
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "schema": {
+              "$ref": "#/definitions/ValidationError"
+            }
+          }
+        }
+      }
+    },
+    "/warehouses/{warehouseId}": {
+      "get": {
+        "summary": "get warehouse by id",
+        "tags": [
+          "Warehouses"
+        ],
+        "parameters": [
+          {
+            "name": "warehouseId",
+            "in": "path",
+            "type": "string",
+            "format": "objectId",
+            "required": true
+          }
+      ],
+       "responses": {
+          "200": {
+            "description": "Ok",
+            "schema": {
+              "$ref": "#/definitions/WarehouseObject"
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update warehouse",
+        "tags": [
+          "Warehouses"
+        ],
+        "parameters": [
+          {
+            "name": "warehouseId",
+            "in": "path",
+            "type": "string",
+            "format": "objectId",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/WarehouseObject"
+            }
+          }
+      ],
+       "responses": {
+          "204": {
+            "description": "NO CONTENT",
+          },
+          "400": {
+            "description": "Validation Error",
+            "schema": {
+              "$ref": "#/definitions/ValidationError"
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete warehouse",
+        "tags": [
+          "Warehouses"
+        ],
+        "parameters": [
+          {
+            "name": "warehouseId",
+            "in": "path",
+            "description": "Page number to return",
+            "type": "string",
+            "format": "objectId",
+            "required": true
+          }
+      ],
+       "responses": {
+          "204": {
+            "description": "NO CONTENT",
+          },
+          "400": {
+            "description": "Validation Error",
+            "schema": {
+              "$ref": "#/definitions/ValidationError"
+            }
+          }
+        }
+      }
+    },
+    "/nfs": {
+      "get": {
+        "summary": "get nf details",
+        "tags": [
+          "NFS"
+        ],
+        "parameters": [
+          {
+            "name": "_page",
+            "in": "query",
+            "description": "Page number to return",
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "_limit",
+            "in": "query",
+            "description": "Number of maximum records per page",
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "_search",
+            "in": "query",
+            "description": "Filters to add to search",
+            "type": "string"
+          }
+      ],
+       "responses": {
+          "200": {
+            "description": "Ok",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/NFObject"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Insert NF",
+        "tags": [
+          "Warehouses"
+        ],
+        "parameters": [
+           {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/NFObject"
+            }
+          }
+      ],
+       "responses": {
+          "201": {
+            "description": "CREATED",
+            "schema": {
+              "$ref": "#/definitions/NFObject"
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "schema": {
+              "$ref": "#/definitions/ValidationError"
+            }
+          }
+        }
+      }
+    },
+    "/nfs/{nfId}": {
+      "get": {
+        "summary": "get nf by id",
+        "tags": [
+          "NF"
+        ],
+        "parameters": [
+          {
+            "name": "nfId",
+            "in": "path",
+            "type": "string",
+            "format": "objectId",
+            "required": true
+          }
+      ],
+       "responses": {
+          "200": {
+            "description": "Ok",
+            "schema": {
+              "$ref": "#/definitions/NFObject"
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update nf info",
+        "tags": [
+          "NF"
+        ],
+        "parameters": [
+          {
+            "name": "nfId",
+            "in": "path",
+            "type": "string",
+            "format": "objectId",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/NFObject"
+            }
+          }
+      ],
+       "responses": {
+          "204": {
+            "description": "NO CONTENT",
+          },
+          "400": {
+            "description": "Validation Error",
+            "schema": {
+              "$ref": "#/definitions/ValidationError"
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete nf",
+        "tags": [
+          "NF"
+        ],
+        "parameters": [
+          {
+            "name": "nfId",
+            "in": "path",
+            "type": "string",
+            "format": "objectId",
+            "required": true
+          }
+      ],
+       "responses": {
+          "204": {
+            "description": "NO CONTENT",
+          },
+          "400": {
+            "description": "Validation Error",
+            "schema": {
+              "$ref": "#/definitions/ValidationError"
+            }
+          }
+        }
+      }
+    },
+  },
+  "definitions": {
+    "ValidationError": {
+      "type": "object",
+      "properties": {
+        "statusCode": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "error": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "validation": {
+          "type": "object",
+          "properties": {
+            "source": {
+              "type": "string"
+            },
+            "keys": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "ProductRequest": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "description": "Unique product identifier",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "family": {
+          "type": "string"
+        },
+        "productType": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "amountInStock": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "leadTime": {
+          "type": "number",
+          "format": "float"
+        },
+        "purchasePrice": {
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
+    "ProductResponse": {
+      "type": "object",
+      "properties": {
+        "_id": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "family": {
+          "type": "string"
+        },
+        "productType": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "amountInStock": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "leadTime": {
+          "type": "number",
+          "format": "float"
+        },
+        "purchasePrice": {
+          "type": "number",
+          "format": "float"
+        },
+        "costValue": {
+          "type": "number",
+          "format": "float"
+        },
+        "__v": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "Error": {
+      "type": "object",
+      "properties": {
+        "statusCode": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "error": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "Structure": {
+      "type": "object",
+      "properties": {
+        "_id": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "family": {
+          "type": "string"
+        },
+        "productType": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "amountInStock": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "leadTime": {
+          "type": "number",
+          "format": "float"
+        },
+        "purchasePrice": {
+          "type": "number",
+          "format": "float"
+        },
+        "costValue": {
+          "type": "number",
+          "format": "float"
+        },
+        "__v": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "relationships": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Relationships"
+          }
+        }
+      }
+    },
+    "Relationships": {
+      "type": "object",
+      "properties": {
+        "properties": {
+          "type": "object",
+          "properties": {
+            "quantity": {
+              "type": "number",
+              "format": "double"
+            }
+          }
+        },
+        "element": {
+          "$ref": "#/definitions/Structure"
+        }
+      }
+    },
+    "NecessityItemRequest": {
+      "type": "object",
+      "properties": {
+        "productId": {
+          "type": "string"
+        },
+        "quantity": {
+          "type": "number",
+          "format": "float"
+        },
+        "deadline": {
+          "type": "string",
+          "format": "dateTime"
+        }
+      }
+    },
+    "NecessityItemResponse": {
+      "type": "object",
+      "properties": {
+        "productId": {
+          "type": "string"
+        },
+        "quantity": {
+          "type": "number",
+          "format": "float"
+        },
+        "deadline": {
+          "type": "string",
+          "format": "dateTime"
+        },
+        "_id": {
+          "type": "string",
+          "format": "ObjectId"
+        },
+        "__v": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "NecessityRequest": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/NecessityItemRequest"
+          }
+        }
+      }
+    },
+    "NecessityResponse": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/NecessityItemResponse"
+          }
+        },
+        "_id": {
+          "type": "string",
+          "format": "ObjectId"
+        },
+        "__v": {
+          "type": "integer"
+        },
+        "posted": {
+          "type": "string",
+          "format": "dateTime"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "WarehouseObject": {
+      "type": "object",
+      "required": ["code", "validSince", "unitId"],
+      "properties": {
+        "_id": {
+          "type": "string",
+          "format": "ObjectId"
+        },
+        "code": {
+          "type": "string"
+        },
+        "validSince":  {
+          "type": "string",
+          "format": "dateTime"
+        },
+        "unitId": {
+          "type": "string",
+          "format": "ObjectId"
+        },
+        "BLOCKED": {
+          "type": "boolean"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "NFObject": {
+      "type": "object",
+      "required": ["nf", "serie", "emittedAt"],
+      "properties": {
+        "_id": {
+          "type": "string",
+          "format": "ObjectId"
+        },
+        "nf": {
+          "type": "string"
+        },
+        "emittedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "serie":  {
+          "type": "string"
+        },
+        "DELETED": {
+          "type": "boolean"
+        },
+        "items": {
+          "type": "object",
+          "required": ["product", "quantity", "batch", "unitPrice"],
+          "properties": {
+            "product": {
+              "type": "string",
+              "format": "ObjectId"
+            },
+            "quantity": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "batch": {
+              "type": "string"
+            },
+            "unitPrice": {
+              "type": "number",
+              "format": "double"
+            },
+            "movementId": {
+              "type": "string",
+              "format": "ObjectId"
+            },
+          }
+        }
+      }
+    }
+  }
+}

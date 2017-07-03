@@ -28,6 +28,7 @@ exports.createWarehouse = {
 	},
 	handler: function(request, reply) {
 			let warehouseInstance = WarehouseModel(request.payload);
+
 			warehouseInstance.save(function(err, doc) {
 				if (!err) {
 					return reply(format(doc, ['DELETED', '__v', 'createdAt', 'updatedAt']))
