@@ -129,8 +129,14 @@ exports.deleteWarehouse = {
 	},
 	handler: function(request, reply) {
 		ProdutoModel.find({'stdWarehouse': response._id}, (err, response) => {
-			if (err || response) {
-				return reply(Boom.badData(request.i18n.__("warehouse.removeError")));
+
+			if(err) {
+				return reply(Boom.badImplementation(err));
+			}
+			else if (response) {
+				if(response.length > 0){
+					return reply(Boom.badData(request.i18n.__("warehouse.removeError")));
+				}
 			}
 
 			WarehouseModel.remove({_id: request.params.warehouseId}, function(err, numAffetcted) {
