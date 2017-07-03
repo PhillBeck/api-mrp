@@ -1216,13 +1216,16 @@
     },
     "NFObject": {
       "type": "object",
-      "required": ["nf", "serie", "emittedAt"],
+      "required": ["nf", "serie", "cnpj", "emittedAt"],
       "properties": {
         "_id": {
           "type": "string",
           "format": "ObjectId"
         },
         "nf": {
+          "type": "string"
+        },
+        "cnpj": {
           "type": "string"
         },
         "emittedAt": {
@@ -1239,7 +1242,7 @@
           "type": "object",
           "required": ["product", "quantity", "batch", "unitPrice"],
           "properties": {
-            "product": {
+            "productId": {
               "type": "string",
               "format": "ObjectId"
             },

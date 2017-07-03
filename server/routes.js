@@ -2,7 +2,8 @@
 var Produto = require('./controller/ProdutoController'),
     Necessity = require('./controller/NecessityController'),
     ProductionOrder = require('./controller/productionOrderController'),
-    WarehouseController = require('./controller/WarehouseController');
+    WarehouseController = require('./controller/WarehouseController'),
+    NFController = require('./controller/NFController');
 
 // API Server Endpoints
 exports.endpoints = [
@@ -157,5 +158,30 @@ exports.endpoints = [
 	method: 'delete',
 	path: '/warehouses/{warehouseId}',
 	config: WarehouseController.deleteWarehouse
-  }
+},
+{
+  method: 'post',
+  path: '/nfs',
+  config: NFController.createNF
+},
+{
+  method: 'get',
+  path: '/nfs',
+  config: NFController.listNFs
+},
+{
+  method: 'get',
+  path: '/nfs/{nfId}',
+  config: NFController.getNFById
+},
+{
+  method: 'put',
+  path: '/nfs/{nfId}',
+  config: NFController.updateNF
+},
+{
+  method: 'delete',
+  path: '/nfs/{nfId}',
+  config: NFController.deleteNF
+}
 ];
