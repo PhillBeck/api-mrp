@@ -17,6 +17,7 @@
 	"product.delete.structureReference": "O producto não pode ser excluído pois é referenciado na estrutura de outros produtos",
 	"warehouse.notFound": "Necessidade não encontrada.",
 	"warehouse.codeNotUnique": "O campo 'code' não pode conter um valor duplicado",
+	"warehouse.removeError": "Esse armazem não pode ser removido, pois existe produtos associados a ele",
 	"nf.notFound": "Necessidade não encontrada.",
 	"nf.codeNotUnique": "O campo 'code' não pode conter um valor duplicado"
 }

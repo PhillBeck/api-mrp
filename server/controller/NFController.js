@@ -15,7 +15,7 @@ const nfItemPayloadValidate = {
 	productId: Joi.objectId().required(),
 	quantity: Joi.number().integer().required(),
 	batch: Joi.string().required(),
-	unitPrice: Joi.number().required().double(),
+	unitPrice: Joi.number().required(),
 	movementId: Joi.objectId()
 }
 

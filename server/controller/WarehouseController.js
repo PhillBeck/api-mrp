@@ -3,6 +3,7 @@
 const Joi = require('joi'),
 	  Boom = require('boom'),
 	  httpTools = require('../utils/httpTools'),
+		ProdutoModel = require('../model/ProdutoModel').Produto,
 	  WarehouseModel = require('../model/WarehouseModel').Warehouse,
 	  format = require('../utils/format'),
 	  _ = require('lodash'),
@@ -127,17 +128,23 @@ exports.deleteWarehouse = {
 		}
 	},
 	handler: function(request, reply) {
-		WarehouseModel.remove({_id: request.params.warehouseId}, function(err, numAffetcted) {
-			if (err) {
-				log.error(request, err);
-				return reply(Boom.badImplementation());
+		ProdutoModel.find({'stdWarehouse': response._id}, (err, response) => {
+			if (err || response) {
+				return reply(Boom.badData(request.i18n.__("warehouse.removeError")));
 			}
 
-			if (numAffetcted.n === 0) {
-				return reply(Boom.notFound(request.i18n.__("warehouse.notFound")));
-			}
+			WarehouseModel.remove({_id: request.params.warehouseId}, function(err, numAffetcted) {
+				if (err) {
+					log.error(request, err);
+					return reply(Boom.badImplementation());
+				}
 
-			return reply().code(204);
+				if (numAffetcted.n === 0) {
+					return reply(Boom.notFound(request.i18n.__("warehouse.notFound")));
+				}
+
+				return reply().code(204);
+			});
 		});
 	}
 }
