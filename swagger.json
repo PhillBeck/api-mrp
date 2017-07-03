@@ -604,6 +604,186 @@
         }
       }
     },
+    "/productionOrders": {
+      "get": {
+        "summary": "Lists Production Orders",
+        "tags": [
+          "Production Orders"
+        ],
+        "parameters": [
+          {
+            "name": "_search",
+            "in": "query",
+            "type": "string",
+            "description": "Search query"
+          },
+          {
+            "name": "_page",
+            "in": "query",
+            "type": "integer",
+            "description": "Page to be sent as response"
+          },
+          {
+            "name": "_limit",
+            "in": "query",
+            "type": "integer",
+            "description": "Maximum number of records to be sent"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/ProductionOrderResponse"
+            }
+          },
+          "400": {
+            "description": "Invalid Query",
+            "schema": {
+              "$ref": "#/definitions/ValidationError"
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Adds new Production Order",
+        "tags": [
+          "Production Orders"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "description": "Production Order object to be saved",
+            "schema": {
+              "$ref": "#/definitions/ProductionOrderRequest"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Production Order Created",
+            "schema": {
+              "$ref": "#/definitions/ProductionOrderResponse"
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "schema": {
+              "$ref": "#/definitions/ValidationError"
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/productionOrders/{Id}": {
+      "parameters": [
+        {
+          "name": "Id",
+          "in": "path",
+          "required": true,
+          "description": "ID of production Order to process.",
+          "type": "string",
+          "format": "ObjectId"
+        }
+      ],
+      "get": {
+        "summary": "Gets specific Prodution Order",
+        "tags": [
+          "Production Orders"
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/ProductionOrderResponse"
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "schema": {
+              "$ref": "#/definitions/ValidationError"
+            }
+          },
+          "404": {
+            "description": "Production Order Not Found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update Production Order",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Updated Production Order document",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ProductionOrderRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Production Orders"
+        ],
+        "responses": {
+          "204": {
+            "description": "Document Updated"
+          },
+          "400": {
+            "description": "Validation Error",
+            "schema": {
+              "$ref": "#/definitions/ValidationError"
+            }
+          },
+          "404": {
+            "description": "Production Order not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deletes Production Order",
+        "tags": [
+          "Production Orders"
+        ],
+        "responses": {
+          "204": {
+            "description": "Production Order deleted"
+          },
+          "400": {
+            "description": "Validation Error",
+            "schema": {
+              "$ref": "#/definitions/ValidationError"
+            }
+          },
+          "404": {
+            "description": "Production Order not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
     "/warehouses": {
       "get": {
         "summary": "get explosion of bill of materials for necessity",
@@ -631,8 +811,8 @@
             "description": "Filters to add to search",
             "type": "string"
           }
-      ],
-       "responses": {
+        ],
+        "responses": {
           "200": {
             "description": "Ok",
             "schema": {
@@ -650,7 +830,7 @@
           "Warehouses"
         ],
         "parameters": [
-           {
+          {
             "name": "body",
             "in": "body",
             "required": true,
@@ -658,8 +838,8 @@
               "$ref": "#/definitions/WarehouseObject"
             }
           }
-      ],
-       "responses": {
+        ],
+        "responses": {
           "201": {
             "description": "CREATED",
             "schema": {
@@ -689,8 +869,8 @@
             "format": "objectId",
             "required": true
           }
-      ],
-       "responses": {
+        ],
+        "responses": {
           "200": {
             "description": "Ok",
             "schema": {
@@ -720,10 +900,10 @@
               "$ref": "#/definitions/WarehouseObject"
             }
           }
-      ],
-       "responses": {
+        ],
+        "responses": {
           "204": {
-            "description": "NO CONTENT",
+            "description": "NO CONTENT"
           },
           "400": {
             "description": "Validation Error",
@@ -747,10 +927,10 @@
             "format": "objectId",
             "required": true
           }
-      ],
-       "responses": {
+        ],
+        "responses": {
           "204": {
-            "description": "NO CONTENT",
+            "description": "NO CONTENT"
           },
           "400": {
             "description": "Validation Error",
@@ -788,8 +968,8 @@
             "description": "Filters to add to search",
             "type": "string"
           }
-      ],
-       "responses": {
+        ],
+        "responses": {
           "200": {
             "description": "Ok",
             "schema": {
@@ -807,7 +987,7 @@
           "Warehouses"
         ],
         "parameters": [
-           {
+          {
             "name": "body",
             "in": "body",
             "required": true,
@@ -815,8 +995,8 @@
               "$ref": "#/definitions/NFObject"
             }
           }
-      ],
-       "responses": {
+        ],
+        "responses": {
           "201": {
             "description": "CREATED",
             "schema": {
@@ -846,8 +1026,8 @@
             "format": "objectId",
             "required": true
           }
-      ],
-       "responses": {
+        ],
+        "responses": {
           "200": {
             "description": "Ok",
             "schema": {
@@ -877,10 +1057,10 @@
               "$ref": "#/definitions/NFObject"
             }
           }
-      ],
-       "responses": {
+        ],
+        "responses": {
           "204": {
-            "description": "NO CONTENT",
+            "description": "NO CONTENT"
           },
           "400": {
             "description": "Validation Error",
@@ -903,10 +1083,10 @@
             "format": "objectId",
             "required": true
           }
-      ],
-       "responses": {
+        ],
+        "responses": {
           "204": {
-            "description": "NO CONTENT",
+            "description": "NO CONTENT"
           },
           "400": {
             "description": "Validation Error",
@@ -917,6 +1097,175 @@
         }
       }
     },
+    "/movements": {
+      "post": {
+        "summary": "Creates new movement",
+        "tags": [
+          "Movements"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/MovementObject"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "CREATED",
+            "schema": {
+              "$ref": "#/definitions/MovementObject"
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "schema": {
+              "$ref": "#/definitions/ValidationError"
+            }
+          },
+          "422": {
+            "description": "Bad Data",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Lists movements",
+        "tags": [
+          "Movements"
+        ],
+        "parameters": [
+          {
+            "name": "_page",
+            "in": "query",
+            "description": "Page number to return",
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "_limit",
+            "in": "query",
+            "description": "Number of maximum records per page",
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "_search",
+            "in": "query",
+            "description": "Filters to add to search",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MovementObject"
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "schema": {
+              "$ref": "#/definitions/ValidationError"
+            }
+          }
+        }
+      }
+    },
+    "/movements/{_id}": {
+      "parameters": [
+        {
+          "name": "_id",
+          "in": "path",
+          "type": "string",
+          "format": "ObjectId",
+          "required": true
+        }
+      ],
+      "get": {
+        "summary": "Gets a movement",
+        "tags": [
+          "Movements"
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "$ref": "#/definitions/MovementObject"
+            }
+          },
+          "400": {
+            "decription": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/ValidationError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Updates a movement",
+        "tags": [
+          "Movements"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/MovementObject"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Movement updated"
+          },
+          "400": {
+            "description": "Validation Error",
+            "schema": {
+              "$ref": "#/definitions/ValidationError"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Removes a movement",
+        "tags": [
+          "Movements"
+        ],
+        "responses": {
+          "204": {
+            "description": "Movement updated"
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    }
   },
   "definitions": {
     "ValidationError": {
@@ -1187,9 +1536,85 @@
         }
       }
     },
+    "ProductionOrderResponse": {
+      "type": "object",
+      "properties": {
+        "_id": {
+          "type": "string",
+          "format": "ObjectId"
+        },
+        "productId": {
+          "type": "string",
+          "format": "ObjectId"
+        },
+        "code": {
+          "type": "string"
+        },
+        "quantity": {
+          "type": "number"
+        },
+        "originalDeadline": {
+          "type": "string",
+          "format": "ISO Date"
+        },
+        "revisedDeadline": {
+          "type": "string",
+          "format": "ISO Date"
+        },
+        "type": {
+          "type": "integer",
+          "enum": [
+            1,
+            2
+          ]
+        },
+        "salesOrderId": {
+          "type": "string",
+          "format": "ObjectId"
+        }
+      }
+    },
+    "ProductionOrderRequest": {
+      "type": "object",
+      "properties": {
+        "productId": {
+          "type": "string",
+          "format": "ObjectId"
+        },
+        "code": {
+          "type": "string"
+        },
+        "quantity": {
+          "type": "number"
+        },
+        "originalDeadline": {
+          "type": "string",
+          "format": "ISO Date"
+        },
+        "revisedDeadline": {
+          "type": "string",
+          "format": "ISO Date"
+        },
+        "type": {
+          "type": "integer",
+          "enum": [
+            1,
+            2
+          ]
+        },
+        "salesOrderId": {
+          "type": "string",
+          "format": "ObjectId"
+        }
+      }
+    },
     "WarehouseObject": {
       "type": "object",
-      "required": ["code", "validSince", "unitId"],
+      "required": [
+        "code",
+        "validSince",
+        "unitId"
+      ],
       "properties": {
         "_id": {
           "type": "string",
@@ -1198,7 +1623,7 @@
         "code": {
           "type": "string"
         },
-        "validSince":  {
+        "validSince": {
           "type": "string",
           "format": "dateTime"
         },
@@ -1216,7 +1641,12 @@
     },
     "NFObject": {
       "type": "object",
-      "required": ["nf", "serie", "cnpj", "emittedAt"],
+      "required": [
+        "nf",
+        "serie",
+        "cnpj",
+        "emittedAt"
+      ],
       "properties": {
         "_id": {
           "type": "string",
@@ -1232,7 +1662,7 @@
           "type": "string",
           "format": "date-time"
         },
-        "serie":  {
+        "serie": {
           "type": "string"
         },
         "DELETED": {
@@ -1240,7 +1670,12 @@
         },
         "items": {
           "type": "object",
-          "required": ["product", "quantity", "batch", "unitPrice"],
+          "required": [
+            "product",
+            "quantity",
+            "batch",
+            "unitPrice"
+          ],
           "properties": {
             "productId": {
               "type": "string",
@@ -1260,8 +1695,55 @@
             "movementId": {
               "type": "string",
               "format": "ObjectId"
-            },
+            }
           }
+        }
+      }
+    },
+    "MovementObject": {
+      "type": "object",
+      "required": [
+        "toProduct",
+        "toWarehouse",
+        "toQuantity",
+        "type"
+      ],
+      "properties": {
+        "_id": {
+          "type": "string",
+          "format": "ObejctId"
+        },
+        "fromProduct": {
+          "type": "string",
+          "format": "ObjectId"
+        },
+        "fromWareHouse": {
+          "type": "string",
+          "format": "ObjectId"
+        },
+        "fromQuantity": {
+          "type": "number"
+        },
+        "toProduct": {
+          "type": "string",
+          "format": "ObjectId"
+        },
+        "toWarehouse": {
+          "type": "string",
+          "format": "ObjectId"
+        },
+        "toQuantity": {
+          "type": "number"
+        },
+        "type": {
+          "type": "string"
+        },
+        "cancelled": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
         }
       }
     }
