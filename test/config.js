@@ -26,5 +26,19 @@ module.exports = {
 		this.description = 'Teste';
 		this.validSince = '2017-06-19';
 		this.unitId = '59554026b0b92b74ba04a81d';
+	},
+
+	NF: function() {
+		nf: Math.random().toString();
+		cnpj: Math.random().toString();
+		serie: Math.random().toString();
+		emittedAt: new Date(),
+		items: {
+			productId: '',
+			quantity: 10,
+			batch: Math.random().toString(),
+			unitPrice: 10.1,
+			movementId: ''
+		}
 	}
 }

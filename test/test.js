@@ -8,9 +8,11 @@ const assert = require('assert'),
 	productTests = require('./productTests'),
 	necessityTests = require('./necessityTests'),
 	productionOrderTests = require('./productionOrderTests'),
-	warehouseTest = require('./warehouseTest');
+	warehouseTest = require('./warehouseTest'),
+	nfTests = require('./NFTests');
 
 productTests.run(server);
 necessityTests.run(server);
 productionOrderTests.run(server);
 warehouseTest.run(server);
+//nfTests.run(server);

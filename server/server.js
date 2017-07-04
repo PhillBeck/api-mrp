@@ -69,7 +69,7 @@ server.ext('onPreResponse', function (request, reply) {
         return reply.continue();
     }
     if (response.data){
-        response.output.payload.data = response.data;
+        response.output.payload.data = response.output;
     }
     return reply(response);
 });
