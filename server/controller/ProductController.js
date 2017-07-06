@@ -3,7 +3,7 @@
 var Joi = require('joi'),
 	Boom = require('boom'),
 	httpTools = require('./../utils/httpTools'),
-	Produto = require('../model/ProdutoModel').Produto,
+	ProductModel = require('../model/ProductModel').Product,
 	mongoose = require('mongoose'),
 	uuidV4 = require('uuid/v4'),
 	_ = require('lodash'),
@@ -66,7 +66,7 @@ exports.create = {
 		config.document = request.payload;
 		delete config.document._id;
 
-		Produto.insertDocNode(config, function (err, product) {
+		ProductModel.insertDocNode(config, function (err, product) {
 			if (!err) {
 				return reply(formatOutput(product, ['__v', 'DELETED'])).created('/products/' + product._id);
 			}
@@ -116,7 +116,7 @@ exports.remove = {
 			var config = new DocNode();
 			config.document._id = request.params._id;
 
-			Produto.softDeleteDocNode(config, function(err) {
+			ProductModel.softDeleteDocNode(config, function(err) {
 				if (!err) {
 					reply().code(204);
 					return;
@@ -153,7 +153,7 @@ exports.update = {
 		config.document = request.payload;
 		config.document._id = request.params._id;
 
-		Produto.updateDocNode(config, function(err, obj) {
+		ProductModel.updateDocNode(config, function(err, obj) {
 			if (!err) {
 				return reply().code(204);
 			}
@@ -181,7 +181,7 @@ exports.getProducts = {
 	handler: function(request, reply) {
 		httpTools.searchQuery(null, request.query, null, function(search, filters) {
 			search["$and"] = [{DELETED: {$eq: false}}];
-			Produto.paginate(search, filters, function(err, product){
+			ProductModel.paginate(search, filters, function(err, product){
 				if (!err) {
 					return reply(formatOutput(product, ['__v', 'DELETED']));
 				}
@@ -208,7 +208,7 @@ exports.getProductById = {
 		}
 	},
 	handler: function(request, reply) {
-		Produto.findById(request.params._id, function(err, doc) {
+		ProductModel.findById(request.params._id, function(err, doc) {
 			if (err) {
 				log.error(request, err)
 				return reply(Boom.badImplementation);
@@ -262,7 +262,7 @@ exports.addChildren = {
 				return reply(Boom.badData(request.i18n.__("produto.addChildren.circularDependencies")));
 			}
 
-			Produto.associateNodes(config, function(err, obj) {
+			ProductModel.associateNodes(config, function(err, obj) {
 				if(!err) {
 					return reply().code(204);
 				}
@@ -298,7 +298,7 @@ exports.getChildren = {
 
 		searchConfig.document._id = request.params._id;
 
-		Produto.getRelationships(searchConfig, function(err, obj) {
+		ProductModel.getRelationships(searchConfig, function(err, obj) {
 			if (!err) {
 				var docs = [];
 				docs.push(extractTreeData(obj.docs));
@@ -330,7 +330,7 @@ exports.removeChildren = {
 		config.node.data.parentNode._id = request.params._parentId;
 		config.node.data.sonNode._id = request.params._childId;
 
-		Produto.disassociate(config, function(err, obj) {
+		ProductModel.disassociate(config, function(err, obj) {
 			if (!err) {
 				return reply().code(204);
 			}
@@ -360,7 +360,7 @@ function validateChildren(parentId, childId, callback) {
 
 	searchConfig.document._id = childId;
 
-	Produto.getDependencies(searchConfig, function(err, obj) {
+	ProductModel.getDependencies(searchConfig, function(err, obj) {
 		if (err) {
 			return callback(err);
 		}
@@ -437,7 +437,7 @@ function validateStructure(id,callback) {
 
 	searchConfig.document._id = id;
 
-	Produto.getRelationships(searchConfig, function(err, obj) {
+	ProductModel.getRelationships(searchConfig, function(err, obj) {
 		if (err) {
 			if (err.error === 'notFound') {
 				return callback(null, null);

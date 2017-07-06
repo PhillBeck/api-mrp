@@ -3,7 +3,7 @@
 const Joi = require('joi'),
 	  Boom = require('boom'),
 	  httpTools = require('../utils/httpTools'),
-		ProdutoModel = require('../model/ProdutoModel').Produto,
+		ProductModel = require('../model/ProductModel').Produto,
 	  WarehouseModel = require('../model/WarehouseModel').Warehouse,
 	  format = require('../utils/format'),
 	  _ = require('lodash'),
@@ -128,7 +128,7 @@ exports.deleteWarehouse = {
 		}
 	},
 	handler: function(request, reply) {
-		ProdutoModel.find({'stdWarehouse': response._id}, (err, response) => {
+		ProductModel.find({'stdWarehouse': response._id}, (err, response) => {
 
 			if(err) {
 				return reply(Boom.badImplementation(err));

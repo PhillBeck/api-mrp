@@ -12,7 +12,7 @@ var mongoose = require('mongoose'),
   * @description Produto schema
 */
 
-var ProdutoSchema = new Schema({
+var ProductSchema = new Schema({
   code:          {type: String, required: true, unique: true},
   name:          {type: String, required: true},
   family:        {type: String},
@@ -25,14 +25,14 @@ var ProdutoSchema = new Schema({
   costValue:     {type: Number}
 });
 
-ProdutoSchema.plugin(mongoosePaginate);
-ProdutoSchema.plugin(mongooseAggregatePaginate);
-ProdutoSchema.plugin(neomongoose, options);
+ProductSchema.plugin(mongoosePaginate);
+ProductSchema.plugin(mongooseAggregatePaginate);
+ProductSchema.plugin(neomongoose, options);
 
-var produto = mongoose.model('Produto', ProdutoSchema);
+var product = mongoose.model('product', ProductSchema);
 
 
 /** export schema */
 module.exports = {
-  Produto : produto
+  Product : product
 };

@@ -1,58 +1,52 @@
 // Load modules
-var Produto = require('./controller/ProdutoController'),
+var Product = require('./controller/ProductController'),
     Necessity = require('./controller/NecessityController'),
     ProductionOrder = require('./controller/productionOrderController'),
     WarehouseController = require('./controller/WarehouseController'),
-    NFController = require('./controller/NFController');
+    NFController = require('./controller/NFController'),
+    TransferMovementController = require('./controller/transferMovementController');
 
 // API Server Endpoints
 exports.endpoints = [
   {
+    method: 'post',
+    path: '/products',
+    config: Product.create
+  },
+  {
+    method: 'put',
+    path: '/products/{_id}',
+    config: Product.update
+  },
+  {
     method: 'get',
-    path: '/',
-    config: {handler: function(req, rep) {
-      rep({});
-    }}
-  },
-  {
-  	method: 'post',
-  	path: '/products',
-  	config: Produto.create
-  },
-  {
-  	method: 'put',
-  	path: '/products/{_id}',
-  	config: Produto.update
-  },
-  {
-  	method: 'get',
-  	path: '/products',
-  	config: Produto.getProducts
+    path: '/products',
+    config: Product.getProducts
   },
   {
     method: 'get',
     path: '/products/{_id}',
-    config: Produto.getProductById
+    config: Product.getProductById
   },
   {
     method: 'delete',
     path: '/products/{_id}',
-    config: Produto.remove
+    config: Product.remove
   },
   {
     method: 'put',
     path: '/products/{_parentId}/children/{_childId}',
-    config: Produto.addChildren
+    config: Product.addChildren
   },
   {
     method: 'get',
     path: '/products/{_id}/children',
-    config: Produto.getChildren
+    config: Product.getChildren
   },
   {
     method: 'delete',
     path: '/products/{_parentId}/children/{_childId}',
-    config: Produto.removeChildren
+    config: Product.removeChildren
   },
   {
     method: 'post',
@@ -130,9 +124,9 @@ exports.endpoints = [
     config: ProductionOrder.updateOrder
   },
   {
-	method: 'delete',
-	path: '/productionOrders/{orderId}',
-	config: ProductionOrder.deleteOrder
+    method: 'delete',
+    path: '/productionOrders/{orderId}',
+    config: ProductionOrder.deleteOrder
   },
   {
     method: 'post',
@@ -155,33 +149,38 @@ exports.endpoints = [
     config: WarehouseController.updateWarehouse
   },
   {
-	method: 'delete',
-	path: '/warehouses/{warehouseId}',
-	config: WarehouseController.deleteWarehouse
-},
-{
-  method: 'post',
-  path: '/nfs',
-  config: NFController.createNF
-},
-{
-  method: 'get',
-  path: '/nfs',
-  config: NFController.listNFs
-},
-{
-  method: 'get',
-  path: '/nfs/{nfId}',
-  config: NFController.getNFById
-},
-{
-  method: 'put',
-  path: '/nfs/{nfId}',
-  config: NFController.updateNF
-},
-{
-  method: 'delete',
-  path: '/nfs/{nfId}',
-  config: NFController.deleteNF
-}
+    method: 'delete',
+    path: '/warehouses/{warehouseId}',
+    config: WarehouseController.deleteWarehouse
+  },
+  {
+    method: 'post',
+    path: '/nfs',
+    config: NFController.createNF
+  },
+  {
+    method: 'get',
+    path: '/nfs',
+    config: NFController.listNFs
+  },
+  {
+    method: 'get',
+    path: '/nfs/{nfId}',
+    config: NFController.getNFById
+  },
+  {
+    method: 'put',
+    path: '/nfs/{nfId}',
+    config: NFController.updateNF
+  },
+  {
+    method: 'delete',
+    path: '/nfs/{nfId}',
+    config: NFController.deleteNF
+  },
+  {
+    method: 'post',
+    path: '/movements/transfers',
+    config: TransferMovementController.create
+  }
 ];

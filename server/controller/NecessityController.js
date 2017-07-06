@@ -4,7 +4,7 @@ var Joi = require('joi'),
 	Boom = require('boom'),
 	httpTools = require('./../utils/httpTools'),
 	Necessity = require('../model/NecessityModel').Necessity,
-	Product = require('../model/ProdutoModel').Produto,
+  ProductModel = require('../model/ProductModel').Product,
 	async = require('async'),
 	_ = require('lodash'),
 	mongoose = require('mongoose'),
@@ -133,7 +133,7 @@ exports.updateNecessity = {
 						break;
 					default:
 						console.log(e);
-						return reply(Boom.badImplementation()); 
+						return reply(Boom.badImplementation());
 				}
 			}
 		});
@@ -282,8 +282,8 @@ exports.addItem = {
 		}
 	},
 	handler: function(request, reply) {
-		
-		Product.count({ _id: request.payload.productId }, function(err, count) {
+
+	ProductModel.count({ _id: request.payload.productId }, function(err, count) {
 			if (!err) {
 				if (count > 0) {
 					Necessity.findById(request.params._id, function(e, doc) {
@@ -384,7 +384,7 @@ exports.updateItem = {
 						doc.save(function(e) {
 
 							if (!e) {
-								return reply().code(204);	
+								return reply().code(204);
 							}
 							else {
 								console.log(e);
@@ -433,7 +433,7 @@ exports.calculateMaterials = {
 
 							return reply().code(204).header('location', '/materials/' + doc._id);
 						});
-					});					
+					});
 				}
 				else {
 					return reply(Boom.notFound(request.i18n.__( "necessity.notFound" )));
@@ -488,7 +488,7 @@ function calculateMaterials(necessity, callback) {
 
 		searchConfig.document._id = item.productId;
 
-		Product.getRelationships(searchConfig, function(err, obj) {
+	ProductModel.getRelationships(searchConfig, function(err, obj) {
 			if (!err) {
 				let materials = [];
 				prepareMaterialsArray(obj.docs, item.quantity, materials);
@@ -517,7 +517,7 @@ function calculateMaterials(necessity, callback) {
 	});
 }
 
-function prepareMaterialsArray(product, currentQuantity, array) { 
+function prepareMaterialsArray(product, currentQuantity, array) {
 
 	currentQuantity = currentQuantity === undefined ? 1 : currentQuantity;
 	var obj = shallowClone(product);
@@ -549,7 +549,7 @@ function checkItems(items, callback) {
 		console.log(e);
 		throw 'Unexpected Error';
 	}
-	Product.find({_id: ids}, '_id', function(err, docs) {
+ProductModel.find({_id: ids}, '_id', function(err, docs) {
 		if (err) {
 			callback({error: 500, message: err});
 		}
@@ -565,7 +565,7 @@ function checkItems(items, callback) {
 	});
 }
 
-function onlyUnique(value, index, self) { 
+function onlyUnique(value, index, self) {
 	return self.indexOf(value) === index;
 }
 
