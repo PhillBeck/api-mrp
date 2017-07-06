@@ -41,11 +41,26 @@ function Movement(fromProduct, fromWareHouse, toProduct, toWarehouse) {
   this.createdAt = "2017-07-03T18:28:57.392Z"
 }
 
+function NF() {
+  this.nf = Math.random().toString();
+  this.cnpj = Math.random().toString();
+  this.serie = Math.random().toString();
+  this.emittedAt = new Date(),
+  this.items = {
+    productId: '',
+    quantity: 10,
+    batch: Math.random().toString(),
+    unitPrice: 10.1,
+    movementId: ''
+  }
+}
+
 module.exports = {
   Product: Product,
   Warehouse: Warehouse,
   ProductionOrder: ProductionOrder,
   Movement: Movement,
+  NF: NF,
   requests: {
     createTransferMovement(server, movement, callback) {
       let movementToSend = movement || new Movement();
