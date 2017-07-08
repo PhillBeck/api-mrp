@@ -2,13 +2,24 @@ const assert = require('assert'),
 	config = require('./config'),
 	expect = require('chai').expect,
 	request = require('supertest'),
+  createRequests = config.requests,
 	fs = require('fs'),
 	async = require('async');
 
 	messages = JSON.parse(fs.readFileSync( './server/locales/pt_BR.json', 'utf8'));
 
 exports.run = function(server) {
+
+  var warehouse;
+
 	describe('Products', function() {
+
+    before(function(done) {
+      createRequests.createWarehouse(server, undefined, function(err, doc) {
+        warehouse = doc._id;
+        done();
+      })
+    })
 
 		describe('Create Product', function() {
 			describe('Valid Product', function() {
@@ -17,7 +28,7 @@ exports.run = function(server) {
 
 				it('#Should save', function(done) {
 
-					let testProduct = new config.Product();
+					let testProduct = new config.Product(warehouse);
 
 					request(server.listener)
 					.post('/products')
@@ -33,7 +44,7 @@ exports.run = function(server) {
 
 			describe('Invalid Product', function() {
 				it('Missing code - Should return 400', function(done) {
-					let testProduct = new config.Product();
+					let testProduct = new config.Product(warehouse);
 					delete testProduct.code;
 
 					request(server.listener)
@@ -47,7 +58,7 @@ exports.run = function(server) {
 				});
 
 				it('Missing name - Should return 400', function(done) {
-					let testProduct = new config.Product();
+					let testProduct = new config.Product(warehouse);
 					delete testProduct.name;
 
 					request(server.listener)
@@ -61,7 +72,7 @@ exports.run = function(server) {
 				});
 
 				it('Not unique code - Should return 422', function(done) {
-					var testProduct = new config.Product();
+					var testProduct = new config.Product(warehouse);
 
 					request(server.listener)
 					.post('/products')
@@ -82,7 +93,7 @@ exports.run = function(server) {
 
 
 				it('Invalid productType - Should return 422', function(done) {
-					let testProduct = new config.Product();
+					let testProduct = new config.Product(warehouse);
 					testProduct.productType = 3;
 
 					request(server.listener)
@@ -100,18 +111,18 @@ exports.run = function(server) {
 
 		describe('Get Products', function() {
 
-			var testProduct = new config.Product();
-
+			var testProduct;
+      var warehouse;
 
 			before(function(done) {
-				request(server.listener)
-				.post('/products')
-				.send(testProduct)
-				.end(function(err, res) {
-					if (err) return done(err);
-					testProduct = res.body;
-					done();
-				});
+        createRequests.createWarehouse(server, undefined, function(err, doc){
+          warehouse = doc._id;
+          testProduct = new config.Product(warehouse);
+          createRequests.createProduct(server, testProduct, function(err, doc) {
+            testProduct = doc;
+            done();
+          });
+        });
 			});
 
 			describe('Valid Inputs', function() {
@@ -204,18 +215,19 @@ exports.run = function(server) {
 
 		describe('Update Products', function() {
 
-			var testProduct = new config.Product();
+			var testProduct;
+      var warehouse;
 
-			before(function(done) {
-				request(server.listener)
-				.post('/products')
-				.send(testProduct)
-				.end(function(err, res) {
-					if (err) return done(err);
-					testProduct = res.body;
-					done();
-				});
-			});
+      before(function(done) {
+        createRequests.createWarehouse(server, undefined, function(err, doc){
+          warehouse = doc._id;
+          testProduct = new config.Product(warehouse);
+          createRequests.createProduct(server, testProduct, function(err, doc) {
+            testProduct = doc;
+            done();
+          });
+        });
+      });
 
 			describe('Valid input', function() {
 
@@ -260,18 +272,19 @@ exports.run = function(server) {
 
 			describe('Valid Input', function() {
 
-				var testProduct = new config.Product();
+        var testProduct;
+        var warehouse;
 
-				before(function(done) {
-					request(server.listener)
-					.post('/products')
-					.send(testProduct)
-					.end(function(err, res) {
-						if (err) return done(err);
-						testProduct = res.body
-						done();
-					});
-				});
+        before(function(done) {
+          createRequests.createWarehouse(server, undefined, function(err, doc){
+            warehouse = doc._id;
+            testProduct = new config.Product(warehouse);
+            createRequests.createProduct(server, testProduct, function(err, doc) {
+              testProduct = doc;
+              done();
+            });
+          });
+        });
 
 				it('Should delete', function(done) {
 					request(server.listener)
@@ -300,7 +313,7 @@ exports.run = function(server) {
 				beforeEach(function(done) {
 					request(server.listener)
 					.post('/products')
-					.send(new config.Product())
+					.send(new config.Product(warehouse))
 					.end(function(err, res) {
 						if (err) return done(err);
 						testProduct.push(res.body);
@@ -404,7 +417,7 @@ exports.run = function(server) {
 				async.times(7, function(n, next) {
 					request(server.listener)
 					.post('/products')
-					.send(new config.Product())
+					.send(new config.Product(warehouse))
 					.end(function(err, res) {
 						next(err, res.body);
 					});
@@ -538,7 +551,7 @@ exports.run = function(server) {
 					async.times(2, function(n, next) {
 						request(server.listener)
 						.post('/products')
-						.send(new config.Product())
+						.send(new config.Product(warehouse))
 						.end( function(err, res) {
 							next(err, res.body);
 						})
@@ -582,7 +595,7 @@ exports.run = function(server) {
 					async.times(5, function(n, next) {
 						request(server.listener)
 						.post('/products')
-						.send(new config.Product())
+						.send(new config.Product(warehouse))
 						.end(function(err, res) {
 							next(err, res.body);
 						});

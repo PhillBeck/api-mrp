@@ -4,8 +4,6 @@ const bunyan = require('bunyan'),
 	  mongoStream = require('mongo-writable-stream'),
 	  dbUrl = require('../config/db').logDB;
 
-console.log(dbUrl)
-
 function createlogger(name) {
 	this.logger = bunyan.createLogger({
 		name: name,

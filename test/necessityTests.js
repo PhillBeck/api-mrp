@@ -4,6 +4,7 @@ const assert = require('assert'),
 	config = require('./config'),
 	expect = require('chai').expect,
 	request = require('supertest'),
+  createRequests = config.requests,
 	fs = require('fs'),
 	async = require('async'),
 	messages = JSON.parse(fs.readFileSync( './server/locales/pt_BR.json', 'utf8'));
@@ -40,7 +41,6 @@ exports.run = function(server) {
 				.end(function(err, res) {
 					expect(res.statusCode).to.equal(400);
 					expect(res.body.message).to.contain('deve ser um objeto');
-					expect(res.body.validation.source).to.equal('payload');
 					done();
 				});
 			});
@@ -68,46 +68,51 @@ exports.run = function(server) {
 					done();
 				});
 			});
-		});	
+		});
 	});
 
 	describe('Get necessities', function() {
 		describe('List necessities', function() {
+      var warehouse;
 			before(function(done) {
 
 				var productId;
 				var necessityId;
 
-				async.parallel([
-					function(callback) {
-						request(server.listener)
-						.post('/products')
-						.send(new config.Product())
-						.end(function(err, res) {
-							productId = res.body._id;
-							callback();
-						});
-					},
-					function(callback) {
-						request(server.listener)
-						.post('/necessities')
-						.send({name: 'testName', description: 'testDescription'})
-						.end(function(err, res) {
-							necessityId = res.body._id;
-							callback();
-						});
-					}
-				], function() {
-					request(server.listener)
-					.post('/necessities/' + necessityId +'/items')
-					.send({
-						productId: productId,
-						quantity: 5,
-						deadline: '2017-06-30'
-					}).end(function(err, res) {
-						done();
-					});
-				});
+        createRequests.createWarehouse(server, undefined, function(err, doc) {
+          warehouse = doc._id;
+
+  				async.parallel([
+  					function(callback) {
+  						request(server.listener)
+  						.post('/products')
+  						.send(new config.Product(warehouse))
+  						.end(function(err, res) {
+  							productId = res.body._id;
+  							callback();
+  						});
+  					},
+  					function(callback) {
+  						request(server.listener)
+  						.post('/necessities')
+  						.send({name: 'testName', description: 'testDescription'})
+  						.end(function(err, res) {
+  							necessityId = res.body._id;
+  							callback();
+  						});
+  					}
+  				], function() {
+  					request(server.listener)
+  					.post('/necessities/' + necessityId +'/items')
+  					.send({
+  						productId: productId,
+  						quantity: 5,
+  						deadline: '2017-06-30'
+  					}).end(function(err, res) {
+  						done();
+  					});
+  				});
+        });
 			});
 
 			it('Should List correctly', function(done) {
@@ -126,45 +131,49 @@ exports.run = function(server) {
 					expect(res.body.docs[0].__v).to.be.undefined;
 					done();
 				});
-			});			
+			});
 		});
 
 		describe('Get Necessity By Id', function() {
-				
+
 			var productId;
 			var necessity;
+      var warehouse;
 
 			before(function(done) {
-				async.parallel([
-					function(callback) {
-						request(server.listener)
-						.post('/products')
-						.send(new config.Product())
-						.end(function(err, res) {
-							productId = res.body._id;
-							callback();
-						});
-					},
-					function(callback) {
-						request(server.listener)
-						.post('/necessities')
-						.send({name: 'testName', description: 'testDescription'})
-						.end(function(err, res) {
-							necessity = res.body;
-							callback();
-						});
-					}
-				], function() {
-					request(server.listener)
-					.post('/necessities/' + necessity._id +'/items')
-					.send({
-						productId: productId,
-						quantity: 5,
-						deadline: '2017-06-30'
-					}).end(function(err, res) {
-						done();
-					});
-				});
+        createRequests.createWarehouse(server, undefined, function(err, doc) {
+          warehouse = doc._id;
+  				async.parallel([
+  					function(callback) {
+  						request(server.listener)
+  						.post('/products')
+  						.send(new config.Product(warehouse))
+  						.end(function(err, res) {
+  							productId = res.body._id;
+  							callback();
+  						});
+  					},
+  					function(callback) {
+  						request(server.listener)
+  						.post('/necessities')
+  						.send({name: 'testName', description: 'testDescription'})
+  						.end(function(err, res) {
+  							necessity = res.body;
+  							callback();
+  						});
+  					}
+  				], function() {
+  					request(server.listener)
+  					.post('/necessities/' + necessity._id +'/items')
+  					.send({
+  						productId: productId,
+  						quantity: 5,
+  						deadline: '2017-06-30'
+  					}).end(function(err, res) {
+  						done();
+  					});
+  				});
+        });
 			});
 
 			it('Should get correctly', function(done) {
@@ -206,38 +215,42 @@ exports.run = function(server) {
 			describe('Valid Input', function() {
 				var productId;
 				var necessity;
+        var warehouse;
 
 				before(function(done) {
-					async.parallel([
-						function(callback) {
-							request(server.listener)
-							.post('/products')
-							.send(new config.Product())
-							.end(function(err, res) {
-								productId = res.body._id;
-								callback();
-							});
-						},
-						function(callback) {
-							request(server.listener)
-							.post('/necessities')
-							.send({name: 'testName', description: 'testDescription'})
-							.end(function(err, res) {
-								necessity = res.body;
-								callback();
-							});
-						}
-					], function() {
-						request(server.listener)
-						.post('/necessities/' + necessity._id +'/items')
-						.send({
-							productId: productId,
-							quantity: 5,
-							deadline: '2017-06-30'
-						}).end(function(err, res) {
-							done();
-						});
-					});
+          createRequests.createWarehouse(server, undefined, function(err, doc) {
+            warehouse = doc._id;
+  					async.parallel([
+  						function(callback) {
+  							request(server.listener)
+  							.post('/products')
+  							.send(new config.Product(warehouse))
+  							.end(function(err, res) {
+  								productId = res.body._id;
+  								callback();
+  							});
+  						},
+  						function(callback) {
+  							request(server.listener)
+  							.post('/necessities')
+  							.send({name: 'testName', description: 'testDescription'})
+  							.end(function(err, res) {
+  								necessity = res.body;
+  								callback();
+  							});
+  						}
+  					], function() {
+  						request(server.listener)
+  						.post('/necessities/' + necessity._id +'/items')
+  						.send({
+  							productId: productId,
+  							quantity: 5,
+  							deadline: '2017-06-30'
+  						}).end(function(err, res) {
+  							done();
+  						});
+  					});
+          });
 				});
 
 				it('Should Update', function(done) {
@@ -251,14 +264,21 @@ exports.run = function(server) {
 
 		var products = [];
 		var necessityId;
+    var warehouse;
 
 		before(function(done) {
 			async.series([
+        function(next) {
+          createRequests.createWarehouse(server, undefined, function(err, doc) {
+            warehouse = doc._id;
+            next();
+          })
+        },
 				function(next) {
 					async.times(10, function(n, callback) {
 						request(server.listener)
 						.post('/products')
-						.send(new config.Product())
+						.send(new config.Product(warehouse))
 						.end(function(err, res) {
 							callback(err, res.body);
 						});

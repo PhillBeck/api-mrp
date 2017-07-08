@@ -2,6 +2,7 @@
 
 const assert = require('assert'),
 	  config = require('./config'),
+    createRequests = config.requests,
 	  expect = require('chai').expect,
 	  request = require('supertest'),
 	  fs = require('fs'),
@@ -14,15 +15,16 @@ exports.run = function(server) {
 	describe('Create Production Order', function() {
 
 		var productId;
+    var warehouse;
 
 		before(function(done) {
-			request(server.listener)
-			.post('/products')
-			.send(new config.Product())
-			.end(function(err, res) {
-				productId = res.body._id;
-				done();
-			});
+      createRequests.createWarehouse(server, undefined, function(err, doc) {
+        warehouse = doc._id;
+        createRequests.createProduct(server, new config.Product(warehouse), function(err, doc) {
+          productId = doc._id;
+          done();
+        });
+      });
 		});
 
 		describe('Valid Input', function() {
@@ -50,7 +52,6 @@ exports.run = function(server) {
 				.post('/productionOrders')
 				.end(function(err, res) {
 					expect(res.statusCode).to.equal(400);
-					expect(res.body.validation.source).to.contain('payload');
 					done(err);
 				});
 			});
@@ -175,21 +176,22 @@ exports.run = function(server) {
 	describe('Get Production Orders', function() {
 
 		var order;
+    var warehouse;
 
 		before(function(done) {
-			request(server.listener)
-			.post('/products')
-			.send(new config.Product())
-			.end(function(err, res) {
-				let productId = res.body._id;
+      createRequests.createWarehouse(server, undefined, function(err, doc) {
+        warehouse = doc._id;
+        createRequests.createProduct(server, new config.Product(warehouse), function(err,doc) {
+          let productId = doc._id;
 
-				request(server.listener)
-				.post('/productionOrders')
-				.send(new config.ProductionOrder(productId))
-				.end(function(err, res) {
-					order = res.body;
-					done(err);
-				});
+  				request(server.listener)
+  				.post('/productionOrders')
+  				.send(new config.ProductionOrder(productId))
+  				.end(function(err, res) {
+  					order = res.body;
+  					done(err);
+  				});
+        });
 			});
 		});
 
@@ -279,21 +281,22 @@ exports.run = function(server) {
 
 	describe('Update Production Order', function() {
 		var order;
+    var warehouse;
 
-		before(function(done) {
-			request(server.listener)
-			.post('/products')
-			.send(new config.Product())
-			.end(function(err, res) {
-				let productId = res.body._id;
+    before(function(done) {
+      createRequests.createWarehouse(server, undefined, function(err, doc) {
+        warehouse = doc._id;
+        createRequests.createProduct(server, new config.Product(warehouse), function(err,doc) {
+          let productId = doc._id;
 
-				request(server.listener)
-				.post('/productionOrders')
-				.send(new config.ProductionOrder(productId))
-				.end(function(err, res) {
-					order = res.body;
-					done(err);
-				});
+  				request(server.listener)
+  				.post('/productionOrders')
+  				.send(new config.ProductionOrder(productId))
+  				.end(function(err, res) {
+  					order = res.body;
+  					done(err);
+  				});
+        });
 			});
 		});
 
@@ -323,23 +326,24 @@ exports.run = function(server) {
 		describe('Invalid input', function() {
 
 			var order;
+      var warehouse;
 
-			before(function(done) {
-				request(server.listener)
-				.post('/products')
-				.send(new config.Product())
-				.end(function(err, res) {
-					let productId = res.body._id;
+      before(function(done) {
+        createRequests.createWarehouse(server, undefined, function(err, doc) {
+          warehouse = doc._id;
+          createRequests.createProduct(server, new config.Product(warehouse), function(err,doc) {
+            let productId = doc._id;
 
-					request(server.listener)
-					.post('/productionOrders')
-					.send(new config.ProductionOrder(productId))
-					.end(function(err, res) {
-						order = res.body;
-						done(err);
-					});
-				});
-			});
+    				request(server.listener)
+    				.post('/productionOrders')
+    				.send(new config.ProductionOrder(productId))
+    				.end(function(err, res) {
+    					order = res.body;
+    					done(err);
+    				});
+          });
+  			});
+  		});
 
 			it('Inexistent ID - should return 404', function(done) {
 				let updatedOrder = {};
@@ -381,23 +385,24 @@ exports.run = function(server) {
 
 		describe('Valid input', function() {
 			var order;
+      var warehouse;
 
-			before(function(done) {
-				request(server.listener)
-				.post('/products')
-				.send(new config.Product())
-				.end(function(err, res) {
-					let productId = res.body._id;
+      before(function(done) {
+        createRequests.createWarehouse(server, undefined, function(err, doc) {
+          warehouse = doc._id;
+          createRequests.createProduct(server, new config.Product(warehouse), function(err,doc) {
+            let productId = doc._id;
 
-					request(server.listener)
-					.post('/productionOrders')
-					.send(new config.ProductionOrder(productId))
-					.end(function(err, res) {
-						order = res.body;
-						done(err);
-					});
-				});
-			});
+            request(server.listener)
+            .post('/productionOrders')
+            .send(new config.ProductionOrder(productId))
+            .end(function(err, res) {
+              order = res.body;
+              done(err);
+            });
+          });
+        });
+      });
 
 
 			it('Should Delete', function(done) {
@@ -417,23 +422,24 @@ exports.run = function(server) {
 
 		describe('Invalid Input', function() {
 			var order;
+      var warehouse;
 
-			before(function(done) {
-				request(server.listener)
-				.post('/products')
-				.send(new config.Product())
-				.end(function(err, res) {
-					let productId = res.body._id;
+      before(function(done) {
+        createRequests.createWarehouse(server, undefined, function(err, doc) {
+          warehouse = doc._id;
+          createRequests.createProduct(server, new config.Product(warehouse), function(err,doc) {
+            let productId = doc._id;
 
-					request(server.listener)
-					.post('/productionOrders')
-					.send(new config.ProductionOrder(productId))
-					.end(function(err, res) {
-						order = res.body;
-						done(err);
-					});
-				});
-			});
+            request(server.listener)
+            .post('/productionOrders')
+            .send(new config.ProductionOrder(productId))
+            .end(function(err, res) {
+              order = res.body;
+              done(err);
+            });
+          });
+        });
+      });
 
 			it('Inexistent ID - should return 404', function(done) {
 				request(server.listener)

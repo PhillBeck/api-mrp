@@ -1,27 +1,24 @@
 'use strict';
 
-var Joi = require('joi'),
+const Joi = require('joi'),
 	Boom = require('boom'),
-	httpTools = require('./../utils/httpTools'),
-  movementModel = require('../model/MovementModel'),
+	httpTools = require('../../utils/httpTools'),
+  movementModel = require('../../model/MovementModel'),
 	mongoose = require('mongoose'),
-	log = require('../utils/log'),
-	formatOutput = require('../utils/format'),
-  uuid = require('uuid/v4'),
-	shallowClone = require('../utils/shallowClone');
+  logFactory = require('../../utils/log'),
+  log = new logFactory.createLogger('transferMovementController'),
+	formatOutput = require('../../utils/format'),
+	shallowClone = require('../../utils/shallowClone');
 Joi.objectId = require('joi-objectid')(Joi);
 
 mongoose.Promise = require('q').Promise;
 
-var payloadValidation = {
+const payloadValidation = {
   _id: Joi.objectId(),
-  fromProduct: Joi.objectId().required(),
-  fromWarehouse: Joi.objectId().required(),
-  fromQuantity: Joi.number().min(0).required(),
-  toProduct: Joi.objectId().required(),
-  toWarehouse: Joi.objectId().required(),
-  toQuantity: Joi.number().min(0).required(),
-  type: Joi.string().valid(['TR']),
+  product: Joi.objectId().required(),
+  warehouse: Joi.objectId().required(),
+  quantity: Joi.number().min(0).required(),
+  type: Joi.string().valid(['IN']),
   cancelled: Joi.boolean().valid(false),
   createdAt: Joi.date().iso()
 }
@@ -31,23 +28,18 @@ exports.create = {
     payload: payloadValidation
   },
   handler: function(request, reply) {
-
     let movement = {
-      type: 'TR',
+      type: 'IN',
       cancelled: false,
-      out: [{
-        product: request.payload.fromProduct,
-        warehouse: request.payload.fromWarehouse,
-        quantity: request.payload.fromQuantity
-      }],
+      out: [],
       in: [{
-        product: request.payload.toProduct,
-        warehouse: request.payload.toWarehouse,
-        quantity: request.payload.toQuantity
+        product: request.payload.product,
+        warehouse: request.payload.warehouse,
+        quantity: request.payload.quantity
       }]
-    }
+    };
 
-    var movementInstance = new movementModel(movement);
+    let movementInstance = new movementModel(movement);
 
     movementInstance.save(function(err, doc) {
       if (err) {
@@ -56,17 +48,17 @@ exports.create = {
             return reply(Boom.badData(request.i18n.__(getErrorMessage(err))));
             break;
           default:
+            log.error(request, err);
             return reply(Boom.badImplementation());
         }
       }
 
-      return reply(doc);
+      return reply(doc).created();
     })
+
   }
 }
 
-
-exports.patch = {}
 
 function getErrorMessage(err) {
   let errorKeys = Object.keys(err.errors).join('');

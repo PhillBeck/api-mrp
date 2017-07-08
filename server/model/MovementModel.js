@@ -15,8 +15,8 @@ var movementItemSchema = new Schema({
 var movementSchema = new Schema({
   type: {type: String, required: true},
   cancelled: {type: Boolean, default: false},
-  in: {type: [movementItemSchema], required: true},
-  out: {type: [movementItemSchema], required: true}
+  in: {type: [movementItemSchema]},
+  out: {type: [movementItemSchema]}
 }, {timestamps: true});
 
 movementSchema.index({'in.product': 1, 'in.warehouse': 1});

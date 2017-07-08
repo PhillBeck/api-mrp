@@ -22,5 +22,6 @@
 	"nf.codeNotUnique": "O campo 'code' não pode conter um valor duplicado",
 	"movement.productNotFound": "Produto não encontrado",
 	"movement.warehouseNotFound": "Armazém não encontrado",
-	"movement.unexpectedValidationError": "Ocorreu um erro inesperado de validação"
+	"movement.unexpectedValidationError": "Ocorreu um erro inesperado de validação",
+  "movement.notFound": "A movimentação não foi encontrada"
 }
