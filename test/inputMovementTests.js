@@ -4,6 +4,7 @@ const assert = require('assert'),
   config = require('./config'),
   requests = config.requests,
   expect = require('chai').expect,
+  promises = require('./promises'),
   request = require('supertest'),
   fs = require('fs'),
   async = require('async'),
@@ -14,18 +15,23 @@ exports.run = function(server) {
   describe('Input Movements', function() {
     describe('Create', function() {
       describe('Valid input', function() {
-        it('Should create', function (done) {
-          async.parallel({
-            product: function(next) { requests.createProduct(server, undefined, next) },
-            warehouse: function(next) { requests.createWarehouse(server, undefined, next) }
-          }, function(err, docs) {
+        it('Should create Movement and Update Stock', function (done) {
+          promises.saveProduct(server).then(function(product) {
             var movement = new config.InputMovement();
-            movement.product = docs.product._id;
-            movement.warehouse = docs.warehouse._id;
+            movement.product = product._id;
+            movement.warehouse = product.stdWarehouse;
 
             postMovement(server, movement, function(err, res) {
               expect(res.statusCode).to.equal(201);
-              done();
+              request(server.listener)
+              .get(`/warehouses/${movement.warehouse}/stocks/${movement.product}`)
+              .end(function(err, res) {
+                expect(res.statusCode).to.equal(200);
+                expect(res.body.warehouse._id).to.equal(movement.warehouse);
+                expect(res.body.product._id).to.equal(movement.product);
+                expect(res.body.quantity).to.equal(5);
+                done();
+              });
             });
           });
         });
@@ -105,9 +111,9 @@ exports.run = function(server) {
         });
 
         it('Inexistent Warehouse - should return 422', function(done) {
-          requests.createProduct(server, undefined, function(err, doc) {
+          promises.saveProduct(server).then(function(product) {
             let movement = new config.InputMovement();
-            movement.product = doc._id;
+            movement.product = product._id;
 
             postMovement(server, movement, function(err, res) {
               expect(res.statusCode).to.equal(422);

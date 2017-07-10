@@ -19,5 +19,4 @@ necessityTests.run(server);
 productionOrderTests.run(server);
 warehouseTest.run(server);
 transferMovementsTests.run(server);
-nfTests.run(server);
 inputMovementTests.run(server);

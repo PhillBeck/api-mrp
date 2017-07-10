@@ -1,17 +1,22 @@
 'use strict';
+require('any-promise/register/q');
 
 const Joi = require('joi'),
 	Boom = require('boom'),
 	httpTools = require('../../utils/httpTools'),
   movementModel = require('../../model/MovementModel'),
 	mongoose = require('mongoose'),
+  async = require('async'),
+  request = require('request'),
   logFactory = require('../../utils/log'),
   log = new logFactory.createLogger('transferMovementController'),
 	formatOutput = require('../../utils/format'),
+  Q = require('q'),
+  rp = require('request-promise-any'),
 	shallowClone = require('../../utils/shallowClone');
 Joi.objectId = require('joi-objectid')(Joi);
 
-mongoose.Promise = require('q').Promise;
+mongoose.Promise = Q.Promise;
 
 const payloadValidation = {
   _id: Joi.objectId(),
@@ -41,9 +46,11 @@ exports.create = {
 
     let movementInstance = new movementModel(movement);
 
-    movementInstance.save(function(err, doc) {
-      if (err) {
-        switch (err.name) {
+    createMovement(movementInstance)
+    .then(function(savedDocument) {
+      return reply(savedDocument).created();
+    }).catch(function(error) {
+      switch (error.err.name) {
           case 'ValidationError':
             return reply(Boom.badData(request.i18n.__(getErrorMessage(err))));
             break;
@@ -51,14 +58,9 @@ exports.create = {
             log.error(request, err);
             return reply(Boom.badImplementation());
         }
-      }
-
-      return reply(doc).created();
-    })
-
+    });
   }
 }
-
 
 function getErrorMessage(err) {
   let errorKeys = Object.keys(err.errors).join('');
@@ -80,4 +82,80 @@ function getErrorMessage(err) {
   }
 
   return "movement.unexpectedValidationError";
+}
+
+function createMovement(movementInstance) {
+  return Q.Promise(function(resolve, reject) {
+    saveInputMovement(movementInstance)
+    .then(updateProductStocks)
+    .then(function() {
+      return resolve(movementInstance)
+    }).catch(function(err) {
+
+      //
+      //TODO: Implement Rollback
+      //
+      
+      
+      return reject(err);
+    });
+  });
+}
+
+function saveInputMovement(movementInstance) {
+  return Q.Promise(function(resolve, reject, notify) {
+    movementInstance.save(function(err, doc) {
+      if (err) {
+        return reject({err: err});
+      }
+
+      return resolve(movementInstance);
+    });
+  });
+}
+
+function updateProductStocks(movementInstance) {
+  return Q.Promise(function(resolve, reject) {
+    var updatedStocks = [];
+    var updatePromises = [];
+    
+    movementInstance.in.forEach(function(element) {
+      updatePromises.push(
+        updateOneProductStock(element)
+        .then(function(updatedDocument) {
+          return updatedStocks.push(updatedDocument);
+        })
+      );
+    });
+
+    movementInstance.out.forEach(function(elemet) {
+      updatePromises.push(
+        updateOneProductStock(element)
+        .then(function(updatedDocument) {
+          return updatedStocks.push(updatedDocument);
+        })
+      );
+    });
+
+    Q.allSettled(updatePromises).then(function() {
+      return resolve();
+    }).catch(function(err) {
+      return reject({
+        err: err,
+        updatedStocks: updatedStocks,
+        createdMovement: movementInstance._id
+      });
+    });
+  });
+}
+
+function updateOneProductStock(item) {
+  var options = {
+    method: 'POST',
+    body: {quantity: item.quantity},
+    uri: `http://localhost:9002/products/${item.product}/stock/${item.warehouse}`,
+    json: true
+  };
+
+  return rp(options)
 }
