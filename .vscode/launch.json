@@ -24,6 +24,15 @@
             "request": "launch",
             "name": "Launch Program",
             "program": "${workspaceRoot}/server/server.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Debug Mode",
+            "program": "${workspaceRoot}/server/server.js",
+            "env": {
+                "NODE_DEBUG": "debug"
+            }
         }
     ]
 }

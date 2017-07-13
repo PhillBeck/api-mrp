@@ -44,12 +44,10 @@ exports.teste = {
 
     movementAdapter.createMovement(movemenInstance)
     .then(function() {
-      console.log('createMovement resolved')
       stockModel.findOne({product: request.payload.product, warehouse: request.payload.warehouse }, function(err, doc) {
         reply((err || doc) + '\n');
       })
     }).catch((err) => {
-      console.log(err);
       reply(err);
     });
   }
