@@ -14,147 +14,165 @@ const Q = require('q'),
 
 mongoose.Promise = Q.Promise;
 
-function createMovement(movementInstance) {
-  bro.debug('createMovement Starting');
-  return Q.Promise(function(resolve,reject) {
-    movementInstance.save()
-    .then(saveStocks)
-    .then(() => {
-      bro.debug('createMovement resolved'); 
-      resolve(movementInstance)
-    })
-    .catch(function(err) {
-      bro.debug('createMovement rejected - starting rollback');
-      rollbackMovement(movementInstance)
+class Transaction {
+  constructor(movementInstance) {
+    this.movementInstance = movementInstance;
+    this.stocks = [];
+  }
+
+  create() {
+    var _self = this;
+    bro.debug('create Starting');
+    return Q.Promise(function(resolve,reject) {
+      _self.movementInstance.save()
+      .then(_self.saveStocks.bind(_self))
       .then(() => {
-        bro.debug('rollbackMovement resolved');
-        reject(err)
+        bro.debug('createMovement resolved'); 
+        resolve(_self.movementInstance)
       })
-      .catch((err) => {
-        bro.debug('rollbackMovement rejected');
-        reject(err);
+      .catch(function(err) {
+        bro.debug('createMovement rejected - starting rollback');
+        bro.debug(err);
+        rollbackMovement(_self.movementInstance)
+        .then(() => {
+          bro.debug('rollbackMovement resolved');
+          reject(err)
+        })
+        .catch((err) => {
+          bro.debug('rollbackMovement rejected');
+          reject(err);
+        });
       });
     });
-  })
-}
+  }
 
-function saveStocks(movement) {
-  bro.debug('saveStocks starting');
-  return Q.Promise(function(resolve, reject) {
+  saveStocks() {
+    var _self = this;
+    bro.debug('saveStocks starting');
+    return Q.Promise(function(resolve, reject) {
 
-    let movementInItems = movement.in.map((element) => {
-      return {
-        product: element.product,
-        warehouse: element.warehouse,
-        movement: movement._id,
-        quantity: element.quantity
-      }
-    })
+      let movementInItems = _self.movementInstance.in.map((element) => {
+        return {
+          product: element.product,
+          warehouse: element.warehouse,
+          movement: _self.movementInstance._id,
+          quantity: element.quantity
+        }
+      })
 
-    let movementItems = movementInItems.concat(movement.out.map((element) => {
-      return {
-        product: element.product,
-        warehouse: element.warehouse,
-        movement: movement._id,
-        quantity: element.quantity*(-1)
-      };
-    }));
+      let movementItems = movementInItems.concat(_self.movementInstance.out.map((element) => {
+        return {
+          product: element.product,
+          warehouse: element.warehouse,
+          movement: _self.movementInstance._id,
+          quantity: element.quantity*(-1)
+        };
+      }));
 
-    let promises = movementItems.map((element) => {
-      let ret = verifyNegativeStock(element)
-      .then(prepareStockInstance)
-      .then(saveOneStock)
-      .catch((err) => { reject(err) })
-      return ret;
-    })
+      let promises = movementItems.map((element) => {
+        let ret = _self.verifyNegativeStock(element)
+        .then(_self.prepareStockInstance)
+        .then(saveOneStock)
+        return ret;
+      })
 
-    Q.allSettled(promises)
-    .then(() => {
-      bro.debug('saveStocks resolved');
-      resolve() 
-    })
-    .catch((err) => {
-      bro.debug('saveStocks rejected');
-      reject(err)
-    })
-  });
-}
+      Q.all(promises)
+      .then(() => {
+        bro.debug('saveStocks resolved');
+        resolve() 
+      })
+      .catch((err) => {
+        bro.debug('saveStocks rejected');
+        bro.debug(err);
+        reject(err)
+      })
+    });
+  }
 
-function verifyNegativeStock(stock) {
-  bro.debug('verifyNegativeStock starting');
-  return Q.Promise(function(resolve, reject) {
-    if (stock.quantity > 0) {
-      bro.debug('verifyNegativeStock resolved - quantity > 0');
-      return resolve(stock);
-    }
-
-    stockModel.findOne({product: stock.product, warehouse: stock.warehouse})
-    .then(function(doc) {
-      let oldQuantity = (doc && doc.quantity) || 0; // doc.quantity if defined, otherwise 0
-      let newQuantity = oldQuantity + stock.quantity;
-
-      if (newQuantity >= 0) {
-        bro.debug('verifyNegativeStock resolved newQuantity > 0')
+  verifyNegativeStock(stock) {
+    var _self = this;
+    bro.debug('verifyNegativeStock starting');
+    return Q.Promise(function(resolve, reject) {
+      if (stock.quantity > 0) {
+        bro.debug('verifyNegativeStock resolved - quantity > 0');
         return resolve(stock);
       }
 
-      let options = {
-        uri: `http://localhost:9002/warehouses/${stock.warehouse}`,
-        json: true
-      };
+      stockModel.findOne({product: stock.product, warehouse: stock.warehouse})
+      .then(function(doc) {
+        let oldQuantity = (doc && doc.quantity) || 0; // doc.quantity if defined, otherwise 0
+        let newQuantity = oldQuantity + stock.quantity;
 
-      request(options).then(function(warehouse) {
-        if (warehouse.allowNegativeStock) {
-          bro.debug('verifyNegativeStock resolved - allowed negative stock');
+        if (newQuantity >= 0) {
+          bro.debug('verifyNegativeStock resolved newQuantity > 0')
           return resolve(stock);
         }
 
-        let error = {
-          name: 'ValidationError',
-          type: 'NonAllowed Negative Stock',
-          target: {
-            warehouse: warehouse._id,
-            product: stock.product
-          }
-        }
+        let options = {
+          uri: `http://localhost:9002/warehouses/${stock.warehouse}`,
+          json: true
+        };
 
-        bro.debug('verifyNegativeStock rejected - nonallowed negative stock');
-        return reject(error)
+        request(options).then(function(warehouse) {
+          if (warehouse.allowNegativeStock) {
+            bro.debug('verifyNegativeStock resolved - allowed negative stock');
+            return resolve(stock);
+          }
+
+          let error = {
+            name: 'ValidationError',
+            type: 'NonAllowed Negative Stock',
+            target: {
+              warehouse: warehouse._id,
+              product: stock.product
+            }
+          }
+
+          bro.debug('verifyNegativeStock rejected - nonallowed negative stock');
+          return reject(error)
+        }).catch((err) => {
+          bro.debug('verifyNegativeStock rejected');
+          reject(err)
+        });
       }).catch((err) => {
         bro.debug('verifyNegativeStock rejected');
         reject(err)
       });
-    }).catch((err) => {
-      bro.debug('verifyNegativeStock rejected');
-      reject(err)
     });
-  });
-}
+  }
 
-function prepareStockInstance(stock) {
-  bro.debug('prepareStockInstance starting');
-  return Q.Promise(function(resolve, reject) {
+  prepareStockInstance(stock) {
+    var _self = this;
+    bro.debug('prepareStockInstance starting');
+    return Q.Promise(function(resolve, reject) {
 
-    stockModel.findOne({ product: stock.product, warehouse: stock.warehouse}, function(err, doc) {
-      if (err) {
-        bro.debug('prepareStockInstance rejected');
-        reject(err);
-      }
+      stockModel.findOne({ product: stock.product, warehouse: stock.warehouse}, function(err, doc) {
+        if (err) {
+          bro.debug('prepareStockInstance rejected');
+          reject(err);
+        }
 
-      if (doc) {
-        doc.quantity += stock.quantity;
-        doc.movement = stock.movement;
+        if (doc) {
+          doc.quantity += stock.quantity;
+          doc.movement = stock.movement;
+          bro.debug('prepareStockInstance resolved');
+          return resolve(doc);
+        }
+
+        let stockInstance = new stockModel(stock);
         bro.debug('prepareStockInstance resolved');
-        return resolve(doc);
-      }
-
-      let stockInstance = new stockModel(stock);
-      bro.debug('prepareStockInstance resolved');
-      return resolve(stockInstance);
-
+        return resolve(stockInstance);
+      });
     });
-  });
+  }
 }
+
+function createMovement(movementInstance) {
+  var transaction = new Transaction(movementInstance);
+  return transaction.create();
+}
+
+function 
 
 function saveOneStock(stockInstance) {
   return stockInstance.save();
@@ -162,6 +180,7 @@ function saveOneStock(stockInstance) {
 
 function rollbackMovement(movementInstance) {
   bro.debug('rollbackMovement starting');
+  bro.debug(movementInstance)
   return rollbackStocks(movementInstance).then(() => {
     return movementInstance.remove();
   })

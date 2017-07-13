@@ -21,21 +21,21 @@ mongoose.Promise = Q.Promise;
 exports.teste = {
   validate: {
     payload: {
-      product: Joi.objectId(),
-      warehouse: Joi.objectId(),
-      quantity: Joi.number()
+      product: Joi.objectId().required(),
+      warehouse: Joi.objectId().required(),
+      quantity: Joi.number().required()
     }
   },
   handler: function(request, reply) {
     let movement = {
-      type: 'TR',
+      type: 'IN',
       cancelled: false,
-      out: [{
+      out: [],
+      in: [{
         product: request.payload.product,
         warehouse: request.payload.warehouse,
         quantity: request.payload.quantity
-      }],
-      in: []
+      }]
     };
 
     let movemenInstance = new movementModel(movement);
@@ -48,6 +48,7 @@ exports.teste = {
         reply((err || doc) + '\n');
       })
     }).catch((err) => {
+      console.log(err)
       reply(err);
     });
   }
