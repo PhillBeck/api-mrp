@@ -5,7 +5,7 @@ var Product = require('./controller/ProductController'),
     WarehouseController = require('./controller/WarehouseController'),
     NFController = require('./controller/NFController'),
     TransferMovementController = require('./controller/movements/transferMovementController'),
-    InputMovementController = require('./controller/movements/inputMovementController');
+    InputMOvementController = require('./controller/movements/inputMovementController');
 
 // API Server Endpoints
 exports.endpoints = [
@@ -186,7 +186,7 @@ exports.endpoints = [
   },
   {
     method: 'post',
-    path: '/movements/input',
-    config: InputMovementController.create
+    path: '/movements/test',
+    config: InputMOvementController.teste
   }
 ];

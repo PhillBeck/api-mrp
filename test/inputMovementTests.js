@@ -4,7 +4,7 @@ const assert = require('assert'),
   config = require('./config'),
   requests = config.requests,
   expect = require('chai').expect,
-  promises = require('./promises'),
+  helper = require('./promises'),
   request = require('supertest'),
   fs = require('fs'),
   async = require('async'),
@@ -16,14 +16,15 @@ exports.run = function(server) {
     describe('Create', function() {
       describe('Valid input', function() {
         it('Should create Movement and Update Stock', function (done) {
-          promises.saveProduct(server).then(function(product) {
+          helper.saveProduct(server).then(function(product) {
             var movement = new config.InputMovement();
             movement.product = product._id;
             movement.warehouse = product.stdWarehouse;
 
             postMovement(server, movement, function(err, res) {
               expect(res.statusCode).to.equal(201);
-              request(server.listener)
+              done(err);
+              /*request(server.listener)
               .get(`/warehouses/${movement.warehouse}/stocks/${movement.product}`)
               .end(function(err, res) {
                 expect(res.statusCode).to.equal(200);
@@ -31,7 +32,7 @@ exports.run = function(server) {
                 expect(res.body.product._id).to.equal(movement.product);
                 expect(res.body.quantity).to.equal(5);
                 done();
-              });
+              });*/
             });
           });
         });
@@ -99,24 +100,26 @@ exports.run = function(server) {
         });
 
         it('Inexistent Product - should return 422', function(done) {
-          requests.createWarehouse(server, undefined, function(err, doc) {
+          helper.saveWarehouse(server).then(function(warehouse) {
             let movement = new config.InputMovement();
-            movement.warehouse = doc._id;
+            movement.warehouse = warehouse._id;
 
             postMovement(server, movement, function(err, res) {
               expect(res.statusCode).to.equal(422);
+              expect(res.body.message).to.eql(messages["movement.productNotFound"])
               done();
             });
           });
         });
 
         it('Inexistent Warehouse - should return 422', function(done) {
-          promises.saveProduct(server).then(function(product) {
+          helper.saveProduct(server).then(function(product) {
             let movement = new config.InputMovement();
             movement.product = product._id;
 
             postMovement(server, movement, function(err, res) {
               expect(res.statusCode).to.equal(422);
+              expect(res.body.message).to.eql(messages["movement.warehouseNotFound"])
               done();
             });
           });
