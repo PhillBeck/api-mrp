@@ -10,7 +10,8 @@ const movementModel = require('../../model/MovementModel'),
 const Q = require('q'),
   request = require('request-promise-any'),
   bro = require('logbro'),
-  mongoose = require('mongoose');
+  mongoose = require('mongoose'),
+  shallowClone = require('../../utils/shallowClone');
 
 mongoose.Promise = Q.Promise;
 
@@ -18,6 +19,7 @@ class Transaction {
   constructor(movementInstance) {
     this.movementInstance = movementInstance;
     this.stocks = [];
+    this.MovementSaved = false;
   }
 
   create() {
@@ -33,7 +35,7 @@ class Transaction {
       .catch(function(err) {
         bro.debug('createMovement rejected - starting rollback');
         bro.debug(err);
-        rollbackMovement(_self.movementInstance)
+        _self.rollbackMovement(_self.movementInstance)
         .then(() => {
           bro.debug('rollbackMovement resolved');
           reject(err)
@@ -46,8 +48,48 @@ class Transaction {
     });
   }
 
+  cancel() {
+    var _self = this;
+    bro.debug('create Starting');
+    return Q.Promise(function(resolve,reject) {
+      _self.movementInstance.save()
+      .then(_self.revertQuantities)
+      .then(_self.saveStocks.bind(_self))
+      .then(() => {
+        bro.debug('createMovement resolved'); 
+        resolve(_self.movementInstance)
+      })
+      .catch(function(err) {
+        bro.debug('createMovement rejected - starting rollback');
+        bro.debug(err);
+        _self.rollbackMovement(_self.movementInstance)
+        .then(() => {
+          bro.debug('rollbackMovement resolved');
+          reject(err)
+        })
+        .catch((err) => {
+          bro.debug('rollbackMovement rejected');
+          reject(err);
+        });
+      });
+    });
+  }
+
+  revertQuantities(movementInstance) {
+    return Q.Promise(function(resolve, reject) {
+      let outItems = movementInstance.in.map((item) => {return shallowClone(item)});
+      let inItems = movementInstance.out.map((item) => {return shallowClone(item)});
+
+      movementInstance.in = inItems;
+      movementInstance.out = outItems;
+
+      setImmediate(resolve, movementInstance);
+    });
+  }
+
   saveStocks() {
     var _self = this;
+    _self.MovementSaved = true;
     bro.debug('saveStocks starting');
     return Q.Promise(function(resolve, reject) {
 
@@ -70,11 +112,13 @@ class Transaction {
       }));
 
       let promises = movementItems.map((element) => {
-        let ret = _self.verifyNegativeStock(element)
+        return _self.verifyNegativeStock(element)
         .then(_self.prepareStockInstance)
-        .then(saveOneStock)
-        return ret;
-      })
+        .then(_self.saveOneStock)
+        .then(function(stock) {
+          _self.stocks.push(stock);
+        });
+      });
 
       Q.all(promises)
       .then(() => {
@@ -165,33 +209,42 @@ class Transaction {
       });
     });
   }
-}
 
-function createMovement(movementInstance) {
-  var transaction = new Transaction(movementInstance);
-  return transaction.create();
-}
+  saveOneStock(stockInstance) {
+    return stockInstance.save();
+  }
 
-function 
+  rollbackMovement(movementInstance) {
+    bro.debug('rollbackMovement starting');
+    return this.rollbackStocks(this)
+    .then(() => {
+      if (movementInstance.__version === 0 || !movementInstance.__version) {
+        bro.debug('rollbackMovement resolved - removing');
+        return movementInstance.remove();
+      }
 
-function saveOneStock(stockInstance) {
-  return stockInstance.save();
-}
+      return Q.Promise(function(resolve,reject) {
+        movementInstance.revert(0, function(err, doc) {
+          if (err) {
+            bro.debug('rollbackMovement rejected');
+            return reject(err);
+          }
 
-function rollbackMovement(movementInstance) {
-  bro.debug('rollbackMovement starting');
-  bro.debug(movementInstance)
-  return rollbackStocks(movementInstance).then(() => {
-    return movementInstance.remove();
-  })
-}
+          bro.debug('rollbackMovement resolved');
+          return resolve()
+        });
+      });
+    }).catch((err) => {
+      bro.debug('rollbackMovement rejected');
+      bro.debug(err);
+      reject(err);
+    });
+  }
 
-function rollbackStocks(movement) {
-  bro.debug('rollbackStocks starting');
-  return Q.Promise(function(resolve, reject) {
-    stockModel.find({movement: movement._id})
-    .then(function(docs) {
-      let promises = docs.map((element) => { return rollbackOneStock(element) });
+  rollbackStocks(_self) {
+    bro.debug('rollbackStocks starting');
+    return Q.Promise(function(resolve, reject) {
+      let promises = _self.stocks.map((element) => { return _self.rollbackOneStock(element) });
       Q.all(promises)
       .then(function() {
         bro.debug('rollbackStocks resolved');
@@ -202,31 +255,44 @@ function rollbackStocks(movement) {
         reject(err);
       });
     });
-  }); 
-}
-
-function rollbackOneStock(stock) {
-  bro.debug('rollbackOneStock starting');
-  if (stock.__version < 1) {
-    bro.debug('rrollbackOneStock resolved');
-    return stock.remove()
   }
 
-  return Q.Promise(function(resolve, reject) {
-    stock.revert(stock.__version - 1, function(err, stock) {
-      if (err) {
-        bro.debug('rollbackOneStock rejected');
-        reject(err)
-      }
+  rollbackOneStock(stock) {
+    bro.debug('rollbackOneStock starting');
+    if (stock.__version < 1) {
+      bro.debug('rrollbackOneStock resolved');
+      return stock.remove()
+    }
 
-      bro.debug('rollbackOneStock resolved');
-      resolve();
-    });
-  })
+    return Q.Promise(function(resolve, reject) {
+      stock.revert(stock.__version - 1, function(err, stock) {
+        if (err) {
+          bro.debug('rollbackOneStock rejected');
+          reject(err)
+        }
+
+        bro.debug('rollbackOneStock resolved');
+        resolve();
+      });
+    })
+  }
+
 }
 
-function cancelMovement(movementInstance) {
-  
+function createMovement(movementInstance) {
+  var transaction = new Transaction(movementInstance);
+  return transaction.create();
+}
+
+function cancelMovement(movementId) {
+  return movementModel.findById(movementId)
+  .then(function(movementInstance) {
+    return Q.Promise(function(resolve, reject) {
+      var transaction = new Transaction(movementInstance);
+
+      Transaction.cancel().then(resolve).catch(reject);
+    })
+  })
 }
 
 module.exports = {
