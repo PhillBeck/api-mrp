@@ -5,7 +5,7 @@ var Product = require('./controller/ProductController'),
     WarehouseController = require('./controller/WarehouseController'),
     NFController = require('./controller/NFController'),
     TransferMovementController = require('./controller/movements/transferMovementController'),
-    InputMOvementController = require('./controller/movements/inputMovementController');
+    InputMovementController = require('./controller/movements/inputMovementController');
 
 // API Server Endpoints
 exports.endpoints = [
@@ -155,6 +155,11 @@ exports.endpoints = [
     config: WarehouseController.deleteWarehouse
   },
   {
+    method: 'get',
+    path:'/warehouses/{warehouseId}/stocks/{productId}',
+    config: WarehouseController.getProductStock
+  },
+  {
     method: 'post',
     path: '/nfs',
     config: NFController.createNF
@@ -186,7 +191,7 @@ exports.endpoints = [
   },
   {
     method: 'post',
-    path: '/movements/test',
-    config: InputMOvementController.teste
+    path: '/movements/input',
+    config: InputMovementController.create
   }
 ];

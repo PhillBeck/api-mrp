@@ -18,6 +18,6 @@ var productionOrderSchema = new Schema({
 
 productionOrderSchema.plugin(mongoosePaginate);
 
-var productionOrderModel = mongoose.model('productionOrders', productionOrderSchema);
+var productionOrderModel = mongoose.model('productionOrder', productionOrderSchema);
 
 module.exports = productionOrderModel;

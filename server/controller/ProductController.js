@@ -13,7 +13,7 @@ var Joi = require('joi'),
 	productionOrderModel = require('../model/productionOrderModel'),
 	necessityModel = require('../model/NecessityModel').Necessity,
 
-	log = new logFactory.createLogger('ProductController');
+	log = new logFactory.Logger('ProductController');
 
 mongoose.Promise = require('q').Promise;
 Joi.objectId = require('joi-objectid')(Joi);

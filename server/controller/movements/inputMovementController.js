@@ -8,8 +8,9 @@ var Joi = require('joi'),
   movementModel = require('../../model/MovementModel'),
 	mongoose = require('mongoose'),
   logFactory = require('../../utils/log'),
+  requestInstance = require('request-promise-any'),
   Q = require('q'),
-  log = new logFactory.createLogger('transferMovementController'),
+  log = new logFactory.Logger('transferMovementController'),
 	formatOutput = require('../../utils/format'),
   stockModel = require('../../model/stockModel'),
   movementAdapter = require('./movementAdapter'),
@@ -18,12 +19,16 @@ Joi.objectId = require('joi-objectid')(Joi);
 
 mongoose.Promise = Q.Promise;
 
-exports.teste = {
+exports.create = {
   validate: {
     payload: {
       product: Joi.objectId().required(),
       warehouse: Joi.objectId().required(),
-      quantity: Joi.number().required()
+      quantity: Joi.number().min(0).required(),
+      type: Joi.string().valid(['IN']),
+      cancelled: Joi.boolean().valid([false]),
+      createdAt: Joi.date().iso(),
+      updatedAt: Joi.date().iso()
     }
   },
   handler: function(request, reply) {
@@ -38,19 +43,44 @@ exports.teste = {
       }]
     };
 
-    let movemenInstance = new movementModel(movement);
+    let movementInstance = new movementModel(movement);
 
-    console.log('Starting');
+    movementAdapter.createMovement(movementInstance)
+    .then((savedMovement) => {
+      reply(savedMovement).created(`/movements/${savedMovement._id}`);
+    })
+    .catch((err) => {
+      err.name = err.name || 'undefined';
 
-    movementAdapter.createMovement(movemenInstance)
-    .then(function() {
-      stockModel.findOne({product: request.payload.product, warehouse: request.payload.warehouse }, function(err, doc) {
-        reply((err || doc) + '\n');
-      })
-    }).catch((err) => {
-      console.log(err)
-      reply(err);
+      switch (err.name) {
+        case 'ValidationError':
+          return reply(Boom.badData(request.i18n.__(getErrorMessage(err))));
+        case 'NotFound':
+          return reply((Boom.notFound(request.i18n.__("movement.notFound"))));
+        default:
+          log.error(request, err);
+          return reply(Boom.badImplementation());
+      }
     });
   }
 }
 
+function getErrorMessage(err) {
+  let errorKeys = Object.keys(err.errors).join('');
+  let documentNotFoundRegex = /(?:\b(in|out).\d.)(\S+)/;
+
+  let regexOutput = documentNotFoundRegex.exec(errorKeys);
+
+  if (regexOutput[2]) {
+    switch(regexOutput[2]) {
+      case 'product':
+        return "movement.productNotFound";
+      case 'warehouse':
+        return 'movement.warehouseNotFound';
+      default:
+        return "movement.unexpectedValidationError";
+    }
+  }
+
+  return "movement.unexpectedValidationError";
+}

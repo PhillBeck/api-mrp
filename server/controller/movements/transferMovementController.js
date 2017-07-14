@@ -4,9 +4,10 @@ var Joi = require('joi'),
 	Boom = require('boom'),
 	httpTools = require('../../utils/httpTools'),
   movementModel = require('../../model/MovementModel'),
+  movementAdapter = require('./movementAdapter'),
 	mongoose = require('mongoose'),
   logFactory = require('../../utils/log'),
-  log = new logFactory.createLogger('transferMovementController'),
+  log = new logFactory.Logger('transferMovementController'),
 	formatOutput = require('../../utils/format'),
 	shallowClone = require('../../utils/shallowClone');
 Joi.objectId = require('joi-objectid')(Joi);
@@ -49,45 +50,50 @@ exports.create = {
 
     var movementInstance = new movementModel(movement);
 
-    movementInstance.save(function(err, doc) {
-      if (err) {
-        switch (err.name) {
-          case 'ValidationError':
-            return reply(Boom.badData(request.i18n.__(getErrorMessage(err))));
-            break;
-          default:
-            log.error(request, err);
-            return reply(Boom.badImplementation());
-        }
-      }
+    movementAdapter.createMovement(movementInstance)
+    .then((savedMovement) => {
+      reply(savedMovement).created(`/movements/${savedMovement._id}`);
+    }).catch((err) => {
+      err.name = err.name || 'undefined';
 
-      return reply(doc);
-    })
+      switch (err.name) {
+        case 'ValidationError':
+          return reply(Boom.badData(request.i18n.__(getErrorMessage(err))));
+        case 'NotFound':
+          return reply((Boom.notFound(request.i18n.__("movement.notFound"))));
+        default:
+          log.error(request, err);
+          return reply(Boom.badImplementation());
+      }
+    });
   }
 }
-
 
 exports.patch = {
   validate: {
     payload: {
-      cancelled: Joi.boolean().required()
+      cancelled: Joi.boolean().valid([true]).required()
     },
     params: {
       _id: Joi.objectId().required()
     }
   },
   handler: function(request, reply) {
-    movementModel.update({_id: request.params._id}, {cancelled: request.payload.cancelled}, function(err, numAffected) {
-      if (err) {
-        log.error(request, err);
-        return reply(Boom.badImplementation());
-      }
 
-      if (numAffected.n === 0) {
-        return reply(Boom.notFound(request.i18n.__("movement.notFound")));
+    movementAdapter.cancelMovement(request.params._id)
+    .then(() => {
+      reply().code(204);
+    }).catch((err) => {
+      err.name = err.name || 'undefined';
+      switch (err.name) {
+        case 'ValidationError':
+          return reply(Boom.badData(request.i18n.__(getErrorMessage(err))));
+        case 'NotFound':
+          return reply((Boom.notFound(request.i18n.__("movement.notFound"))));
+        default:
+          log.error(request, err);
+          return reply(Boom.badImplementation());
       }
-
-      return reply().code(204);
     });
   }
 }
@@ -102,10 +108,8 @@ function getErrorMessage(err) {
     switch(regexOutput[2]) {
       case 'product':
         return "movement.productNotFound";
-        break;
       case 'warehouse':
         return 'movement.warehouseNotFound';
-        break;
       default:
         return "movement.unexpectedValidationError";
     }

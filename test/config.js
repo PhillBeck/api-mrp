@@ -56,10 +56,10 @@ function NF() {
         }
 }
 
-function InputMovement() {
-    this.product = '012345678901234567890123';
+function InputMovement(product) {
+    this.product = product._id || '012345678901234567890123';
     this.quantity = 5;
-    this.warehouse = '012345678901234567890123';
+    this.warehouse = product.stdWarehouse || '012345678901234567890123';
     this.type = 'IN';
     this.cancelled = false;
 }

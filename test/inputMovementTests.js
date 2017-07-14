@@ -23,16 +23,15 @@ exports.run = function(server) {
 
             postMovement(server, movement, function(err, res) {
               expect(res.statusCode).to.equal(201);
-              done(err);
-              /*request(server.listener)
+              request(server.listener)
               .get(`/warehouses/${movement.warehouse}/stocks/${movement.product}`)
               .end(function(err, res) {
                 expect(res.statusCode).to.equal(200);
-                expect(res.body.warehouse._id).to.equal(movement.warehouse);
-                expect(res.body.product._id).to.equal(movement.product);
+                expect(res.body.warehouse).to.equal(movement.warehouse);
+                expect(res.body.product).to.equal(movement.product);
                 expect(res.body.quantity).to.equal(5);
                 done();
-              });*/
+              });
             });
           });
         });
@@ -99,6 +98,7 @@ exports.run = function(server) {
           });
         });
 
+        
         it('Inexistent Product - should return 422', function(done) {
           helper.saveWarehouse(server).then(function(warehouse) {
             let movement = new config.InputMovement();

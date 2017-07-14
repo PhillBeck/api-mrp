@@ -66,4 +66,4 @@ function errorDataSerializer (obj) {
 	return ret;
 };
 
-module.exports = {createLogger: createlogger}
+module.exports = {Logger: createlogger}

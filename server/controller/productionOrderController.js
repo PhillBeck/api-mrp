@@ -8,7 +8,7 @@ const Joi = require('joi'),
 	  format = require('../utils/format'),
 	  _ = require('lodash'),
 	  logFactory = require('../utils/log'),
-	  log = new logFactory.createLogger('productionOrderController');
+	  log = new logFactory.Logger('productionOrderController');
 
 Joi.objectId = require('joi-objectid')(Joi);
 

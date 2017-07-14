@@ -15,6 +15,7 @@ var movementItemSchema = new Schema({
 var movementSchema = new Schema({
   type: {type: String, required: true},
   cancelled: {type: Boolean, default: false},
+  productionOrder: {type: Schema.Types.ObjectId, ref: 'productionOrder'},
   in: {type: [movementItemSchema]},
   out: {type: [movementItemSchema]}
 }, {timestamps: true});

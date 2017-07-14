@@ -7,7 +7,7 @@ const Joi = require('joi'),
 	  format = require('../utils/format'),
 	  _ = require('lodash'),
 	  logFactory = require('../utils/log'),
-	  log = new logFactory.createLogger('NFController');
+	  log = new logFactory.Logger('NFController');
 
 Joi.objectId = require('joi-objectid')(Joi);
 

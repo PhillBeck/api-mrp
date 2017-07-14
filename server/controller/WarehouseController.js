@@ -4,11 +4,12 @@ const Joi = require('joi'),
 	  Boom = require('boom'),
 	  httpTools = require('../utils/httpTools'),
 		ProductModel = require('../model/ProductModel').Produto,
+		stockModel = require('../model/stockModel'),
 	  WarehouseModel = require('../model/WarehouseModel').Warehouse,
 	  format = require('../utils/format'),
 	  _ = require('lodash'),
 	  logFactory = require('../utils/log'),
-	  log = new logFactory.createLogger('WarehouseController');
+	  log = new logFactory.Logger('WarehouseController');
 
 Joi.objectId = require('joi-objectid')(Joi);
 
@@ -20,6 +21,7 @@ const warehouseloadValidate = {
 	description: Joi.string(),
 	validSince: Joi.date().required(),
 	unitId: Joi.objectId().required(),
+	allowNegativeStock: Joi.boolean(),
 	BLOCKED: Joi.boolean()
 }
 
@@ -152,5 +154,27 @@ exports.deleteWarehouse = {
 				return reply().code(204);
 			});
 		});
+	}
+}
+
+exports.getProductStock = {
+	validate: {
+		params: {
+			warehouseId: Joi.objectId().required(),
+			productId: Joi.objectId().required()
+		}
+	},
+	handler: function(request, reply) {
+		stockModel.findOne({warehouse: request.params.warehouseId, product: request.params.productId})
+		.then((stock) => {
+			if (!stock) {
+				return reply(Boom.notFound(request.i18n.__("stock.notFound")));
+			}
+			reply(stock)
+		})
+		.catch((err) => {
+			log.error(request, err);
+			reply(Boom.badImplementation());
+		})
 	}
 }

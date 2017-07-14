@@ -218,7 +218,7 @@ class Transaction {
     bro.debug('rollbackMovement starting');
     return this.rollbackStocks(this)
     .then(() => {
-      if (movementInstance.__version === 0 || !movementInstance.__version) {
+      if (movementInstance._version === 0 || !movementInstance._version) {
         bro.debug('rollbackMovement resolved - removing');
         return movementInstance.remove();
       }
@@ -259,13 +259,13 @@ class Transaction {
 
   rollbackOneStock(stock) {
     bro.debug('rollbackOneStock starting');
-    if (stock.__version < 1) {
+    if (stock._version < 1) {
       bro.debug('rrollbackOneStock resolved');
       return stock.remove()
     }
 
     return Q.Promise(function(resolve, reject) {
-      stock.revert(stock.__version - 1, function(err, stock) {
+      stock.revert(stock._version - 1, function(err, stock) {
         if (err) {
           bro.debug('rollbackOneStock rejected');
           reject(err)
@@ -285,16 +285,24 @@ function createMovement(movementInstance) {
 }
 
 function cancelMovement(movementId) {
-  return movementModel.findById(movementId)
-  .then(function(movementInstance) {
-    return Q.Promise(function(resolve, reject) {
+
+  return Q.Promise(function(resolve, reject) {
+    movementModel.findById(movementId)
+    .then(function(movementInstance) {
+
+      if (!movementInstance) {
+        return reject({name: 'NotFound'})
+      }
+
       var transaction = new Transaction(movementInstance);
 
-      Transaction.cancel().then(resolve).catch(reject);
-    })
-  })
+      transaction.cancel().then(resolve).catch(reject)
+
+    }).catch(reject)
+  });
 }
 
 module.exports = {
-  createMovement: createMovement
+  createMovement: createMovement,
+  cancelMovement: cancelMovement
 }
