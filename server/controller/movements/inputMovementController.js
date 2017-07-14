@@ -66,6 +66,10 @@ exports.create = {
 }
 
 function getErrorMessage(err) {
+  if (err.type === 'NonAllowed Negative Stock') {
+    return "movement.negativeStock"
+  }
+
   let errorKeys = Object.keys(err.errors).join('');
   let documentNotFoundRegex = /(?:\b(in|out).\d.)(\S+)/;
 

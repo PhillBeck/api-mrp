@@ -28,12 +28,13 @@ function Warehouse() {
     this.description = 'Teste';
     this.validSince = '2017-06-19';
     this.unitId = '59554026b0b92b74ba04a81d';
+    this.allowNegativeStock = false;
 }
 
 function TransferMovement(fromProduct, fromWareHouse, toProduct, toWarehouse) {
     this.fromProduct = fromProduct || '012345678901234567890123';
     this.fromWarehouse = fromWareHouse || '012345678901234567890123';
-    this.fromQuantity = 1;
+    this.fromQuantity = 5;
     this.toProduct = toProduct || '012345678901234567890123';
     this.toWarehouse = toWarehouse || '012345678901234567890123';
     this.toQuantity = 5;
@@ -57,9 +58,9 @@ function NF() {
 }
 
 function InputMovement(product) {
-    this.product = product._id || '012345678901234567890123';
+    this.product = (product && product._id) || '012345678901234567890123';
     this.quantity = 5;
-    this.warehouse = product.stdWarehouse || '012345678901234567890123';
+    this.warehouse = (product && product.stdWarehouse) || '012345678901234567890123';
     this.type = 'IN';
     this.cancelled = false;
 }

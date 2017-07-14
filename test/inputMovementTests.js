@@ -17,7 +17,7 @@ exports.run = function(server) {
       describe('Valid input', function() {
         it('Should create Movement and Update Stock', function (done) {
           helper.saveProduct(server).then(function(product) {
-            var movement = new config.InputMovement();
+            var movement = new config.InputMovement(product);
             movement.product = product._id;
             movement.warehouse = product.stdWarehouse;
 
@@ -129,7 +129,10 @@ exports.run = function(server) {
 
     describe('Update', function() {
       describe('Valid Input', function() {
-
+        helper.saveInputMovement(server)
+        .then((movement) => {
+          console.log(movement);
+        })
       });
     });
   });

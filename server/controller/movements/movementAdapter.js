@@ -35,7 +35,7 @@ class Transaction {
       .catch(function(err) {
         bro.debug('createMovement rejected - starting rollback');
         bro.debug(err);
-        _self.rollbackMovement(_self.movementInstance)
+        _self.rollbackCreate(_self.movementInstance)
         .then(() => {
           bro.debug('rollbackMovement resolved');
           reject(err)
@@ -62,7 +62,7 @@ class Transaction {
       .catch(function(err) {
         bro.debug('createMovement rejected - starting rollback');
         bro.debug(err);
-        _self.rollbackMovement(_self.movementInstance)
+        _self.rollbackCreate(_self.movementInstance)
         .then(() => {
           bro.debug('rollbackMovement resolved');
           reject(err)
@@ -214,7 +214,7 @@ class Transaction {
     return stockInstance.save();
   }
 
-  rollbackMovement(movementInstance) {
+  rollbackCreate(movementInstance) {
     bro.debug('rollbackMovement starting');
     return this.rollbackStocks(this)
     .then(() => {
@@ -239,6 +239,10 @@ class Transaction {
       bro.debug(err);
       reject(err);
     });
+  }
+
+  rollabckDelete(movementInstance) {
+    
   }
 
   rollbackStocks(_self) {

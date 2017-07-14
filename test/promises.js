@@ -36,7 +36,30 @@ function saveProduct(server, warehouse) {
       .end(function(err, res) {
         resolve(res.body);
       });
-    });
+    }).catch(reject);
+  });
+}
+
+function promiseInputMovement(server) {
+  return Q.Promise(function(resolve, reject) {
+    saveProduct(server)
+    .then(function(product) {
+      resolve(new config.InputMovement(product));
+    })
+    .catch(reject);
+  });
+}
+
+function saveInputMovement(server) {
+  return Q.Promise(function(resolve, reject) {
+    promiseInputMovement(server).then(function(movement) {
+      request(server.listener)
+      .post('/movements/input')
+      .send(movement)
+      .then((res) => {
+        resolve(res.body);
+      })
+    })
   });
 }
 
@@ -65,9 +88,8 @@ function promiseProductionOrder(server, product) {
   });
 }
 
-function promiseInputMovement() {}
-
 module.exports = {
   saveWarehouse: saveWarehouse,
-  saveProduct: saveProduct
+  saveProduct: saveProduct,
+  saveInputMovement: saveInputMovement
 }

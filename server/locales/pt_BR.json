@@ -24,5 +24,6 @@
 	"movement.warehouseNotFound": "Armazém não encontrado",
 	"movement.unexpectedValidationError": "Ocorreu um erro inesperado de validação",
   "movement.notFound": "A movimentação não foi encontrada",
-	"stock.notFound": "Não foi encontrado registro de estoque"
+	"stock.notFound": "Não foi encontrado registro de estoque",
+	"movement.negativeStock": "A movimentação iria gerar estoques negativos"
 }
