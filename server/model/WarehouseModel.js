@@ -11,7 +11,8 @@ var WarehouseSchema = new Schema ({
   description: {type: String, required: true},
   validSince: {type: Date, required: true},
   unitId: {type: String, required: true},
-  BLOCKED: {type: Boolean, default: false}
+  BLOCKED: {type: Boolean, default: false},
+  allowNegativeStock: {type: Boolean, default: false}
 }, {timestamps: true});
 
 WarehouseSchema.plugin(mongoosePaginate);

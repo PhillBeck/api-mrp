@@ -156,7 +156,6 @@ class Transaction {
           uri: `http://localhost:9002/warehouses/${stock.warehouse}`,
           json: true
         };
-
         request(options).then(function(warehouse) {
           if (warehouse.allowNegativeStock) {
             bro.debug('verifyNegativeStock resolved - allowed negative stock');
@@ -167,7 +166,7 @@ class Transaction {
             name: 'ValidationError',
             type: 'NonAllowed Negative Stock',
             target: {
-              warehouse: warehouse._id,
+             // warehouse: warehouse._id,
               product: stock.product
             }
           }

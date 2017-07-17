@@ -13,10 +13,10 @@ const assert = require('assert'),
     inputMovementTests = require('./inputMovementTests'),
     nfTests = require('./NFTests');
 
-/*
+
 productTests.run(server);
 necessityTests.run(server);
 productionOrderTests.run(server);
-warehouseTest.run(server);*/
+warehouseTest.run(server);
+inputMovementTests.run(server);
 transferMovementsTests.run(server);
-// inputMovementTests.run(server);

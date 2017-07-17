@@ -17,7 +17,7 @@ exports.run = function (server) {
     describe('Create', function () {
       
       describe('Valid Input', function () {
-        /*
+        
         it('Transfer with positive stock - should return 201', function(done) {
           let promises = [helper.saveInputMovement(server), helper.saveProduct(server)];
 
@@ -38,7 +38,7 @@ exports.run = function (server) {
             });
           });
         });
-        */
+        
 
         it('Transfer with allowed negative stock - should return 201', function(done) {
           let warehouse = new config.Warehouse();
@@ -48,7 +48,7 @@ exports.run = function (server) {
             let promises = [helper.saveProduct(server, warehouse._id), helper.saveProduct(server)];
 
             Q.all(promises).spread(function(fromProduct, toProduct) {
-              let movement = new config.movement(fromProduct._id, fromProduct.stdWarehouse);
+              let movement = new config.TransferMovement(fromProduct._id, fromProduct.stdWarehouse);
               movement.toProduct = toProduct._id;
               movement.toWarehouse = toProduct.stdWarehouse;
 
@@ -56,12 +56,12 @@ exports.run = function (server) {
                 expect(res.statusCode).to.equal(201);
                 done();
               });
-            });
+            }).catch(done)
           });
         });
       });
 
-      /*
+
       describe('Invalid input', function () {
 
         it('Invalid fromProduct - should return 400', function (done) {
@@ -278,7 +278,6 @@ exports.run = function (server) {
 
         it('Nonallowed Negative stock - should return 422');
       });
-      */
     });
 
     describe('Update', function () {

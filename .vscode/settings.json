@@ -4,5 +4,6 @@
     "editor.tabSize": 2,
     "editor.fontSize": 14,
     "editor.fontFamily": "'Source Code Pro', monospace",
-    "editor.formatOnSave": false
+    "editor.formatOnSave": false,
+    "eslint.enable": false
 }
