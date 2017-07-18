@@ -23,7 +23,8 @@ var ProductSchema = new Schema({
   leadTime:      {type: Number},
   purchasePrice: {type: Number},
   costValue:     {type: Number},
-  stdWarehouse:  {type: Schema.Types.ObjectId, ref: 'warehouse'}
+  stdWarehouse:  {type: Schema.Types.ObjectId, ref: 'warehouse'},
+  ghost:         {type: Boolean, default: false}
 });
 
 ProductSchema.plugin(mongoosePaginate);

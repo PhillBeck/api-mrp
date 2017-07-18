@@ -48,13 +48,8 @@ const productPayloadValidate = {
 	leadTime:      Joi.number(),
 	purchasePrice: Joi.number(),
 	_id: 		       Joi.objectId(),
-  stdWarehouse:  Joi.objectId(),
-  stock: Joi.array().sparse().items(
-    Joi.object().keys({
-      warehouse: Joi.objectId().required(),
-      quantity: Joi.number().required()
-    })
-  )
+	stdWarehouse:  Joi.objectId(),
+	ghost:         Joi.boolean()
 }
 
 exports.create = {
