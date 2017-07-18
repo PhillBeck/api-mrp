@@ -98,7 +98,6 @@ exports.run = function(server) {
           });
         });
 
-        
         it('Inexistent Product - should return 422', function(done) {
           helper.saveWarehouse(server).then(function(warehouse) {
             let movement = new config.InputMovement();
@@ -124,15 +123,6 @@ exports.run = function(server) {
             });
           });
         });
-      });
-    });
-
-    describe('Update', function() {
-      describe('Valid Input', function() {
-        helper.saveInputMovement(server)
-        .then((movement) => {
-          console.log(movement);
-        })
       });
     });
   });

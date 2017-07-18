@@ -16,25 +16,31 @@ function promiseProduct(server, warehouse) {
   });
 }
 
-function saveWarehouse(server) {
+function saveWarehouse(server, warehouse) {
   return Q.Promise(function(resolve, reject, notify) {
+    let warehouseToSend = warehouse || new config.Warehouse();
+
     request(server.listener)
     .post('/warehouses')
-    .send(new config.Warehouse())
+    .send(warehouseToSend)
     .end(function(err, res) {
       return resolve(res.body);
-    });
+    })
   });
 }
 
 function saveProduct(server, warehouse) {
-  return Q.Promise(function(resolve, reject, notify) {
+  return Q.Promise(function(resolve, reject) {
     promiseProduct(server, warehouse).then(function(product) {
       request(server.listener)
       .post('/products')
       .send(product)
       .end(function(err, res) {
-        resolve(res.body);
+        if (err) {
+          return reject(err);
+        }
+
+        return resolve(res.body);
       });
     }).catch(reject);
   });
@@ -50,16 +56,26 @@ function promiseInputMovement(server) {
   });
 }
 
-function saveInputMovement(server) {
+function saveInputMovement(server, movement) {
   return Q.Promise(function(resolve, reject) {
-    promiseInputMovement(server).then(function(movement) {
+
+    if (movement) {
       request(server.listener)
       .post('/movements/input')
       .send(movement)
       .then((res) => {
         resolve(res.body);
       })
-    })
+    } else {
+      promiseInputMovement(server).then(function(movement) {
+        request(server.listener)
+        .post('/movements/input')
+        .send(movement)
+        .then((res) => {
+          resolve(res.body);
+        })
+      })
+    }
   });
 }
 
@@ -88,8 +104,20 @@ function promiseProductionOrder(server, product) {
   });
 }
 
+function getStockInWarehouse(server, product, warehouse) {
+  return Q.Promise(function(resolve, reject) {
+    request(server.listener)
+    .get(`/warehouses/${warehouse}/stocks/${product}`)
+    .then(function(res) {
+      resolve(res.body);
+    })
+    .catch(reject);
+  });
+}
+
 module.exports = {
   saveWarehouse: saveWarehouse,
   saveProduct: saveProduct,
-  saveInputMovement: saveInputMovement
+  saveInputMovement: saveInputMovement,
+  getStockInWarehouse: getStockInWarehouse
 }

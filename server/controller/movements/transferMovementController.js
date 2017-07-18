@@ -58,7 +58,7 @@ exports.create = {
 
       switch (err.name) {
         case 'ValidationError':
-          return reply(Boom.badData(request.i18n.__(getErrorMessage(err))));
+          return reply(Boom.badData(request.i18n.__(movementAdapter.getErrorMessage(err))));
         case 'NotFound':
           return reply((Boom.notFound(request.i18n.__("movement.notFound"))));
         default:
@@ -75,19 +75,19 @@ exports.patch = {
       cancelled: Joi.boolean().valid([true]).required()
     },
     params: {
-      _id: Joi.objectId().required()
+      movementId: Joi.objectId().required()
     }
   },
   handler: function(request, reply) {
 
-    movementAdapter.cancelMovement(request.params._id)
+    movementAdapter.cancelMovement(request.params.movementId)
     .then(() => {
       reply().code(204);
     }).catch((err) => {
       err.name = err.name || 'undefined';
       switch (err.name) {
         case 'ValidationError':
-          return reply(Boom.badData(request.i18n.__(getErrorMessage(err))));
+          return reply(Boom.badData(request.i18n.__(movementAdapter.getErrorMessage(err))));
         case 'NotFound':
           return reply((Boom.notFound(request.i18n.__("movement.notFound"))));
         default:
@@ -96,24 +96,4 @@ exports.patch = {
       }
     });
   }
-}
-
-function getErrorMessage(err) {
-  let errorKeys = Object.keys(err.errors).join('');
-  let documentNotFoundRegex = /(?:\b(in|out).\d.)(\S+)/;
-
-  let regexOutput = documentNotFoundRegex.exec(errorKeys);
-
-  if (regexOutput[2]) {
-    switch(regexOutput[2]) {
-      case 'product':
-        return "movement.productNotFound";
-      case 'warehouse':
-        return 'movement.warehouseNotFound';
-      default:
-        return "movement.unexpectedValidationError";
-    }
-  }
-
-  return "movement.unexpectedValidationError";
 }

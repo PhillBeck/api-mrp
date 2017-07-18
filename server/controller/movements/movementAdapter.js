@@ -4,6 +4,7 @@ require('any-promise/register/q');
 
 // Import Models
 const movementModel = require('../../model/MovementModel'),
+  warehouseModel = require('../../model/WarehouseModel').Warehouse,
   stockModel = require('../../model/stockModel');
 
 //Import libraries
@@ -156,7 +157,8 @@ class Transaction {
           uri: `http://localhost:9002/warehouses/${stock.warehouse}`,
           json: true
         };
-        request(options).then(function(warehouse) {
+
+        warehouseModel.findById(stock.warehouse).then(function(warehouse) {  
           if (warehouse.allowNegativeStock) {
             bro.debug('verifyNegativeStock resolved - allowed negative stock');
             return resolve(stock);
@@ -166,7 +168,7 @@ class Transaction {
             name: 'ValidationError',
             type: 'NonAllowed Negative Stock',
             target: {
-             // warehouse: warehouse._id,
+              warehouse: warehouse._id,
               product: stock.product
             }
           }
@@ -305,7 +307,32 @@ function cancelMovement(movementId) {
   });
 }
 
+function getErrorMessage(err) {
+  if (err.type === 'NonAllowed Negative Stock') {
+    return "movement.negativeStock"
+  }
+
+  let errorKeys = Object.keys(err.errors).join('');
+  let documentNotFoundRegex = /(?:\b(in|out).\d.)(\S+)/;
+
+  let regexOutput = documentNotFoundRegex.exec(errorKeys);
+
+  if (regexOutput[2]) {
+    switch(regexOutput[2]) {
+      case 'product':
+        return "movement.productNotFound";
+      case 'warehouse':
+        return 'movement.warehouseNotFound';
+      default:
+        return "movement.unexpectedValidationError";
+    }
+  }
+
+  return "movement.unexpectedValidationError";
+}
+
 module.exports = {
   createMovement: createMovement,
-  cancelMovement: cancelMovement
+  cancelMovement: cancelMovement,
+  getErrorMessage: getErrorMessage
 }

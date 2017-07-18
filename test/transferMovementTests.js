@@ -49,6 +49,7 @@ exports.run = function (server) {
 
             Q.all(promises).spread(function(fromProduct, toProduct) {
               let movement = new config.TransferMovement(fromProduct._id, fromProduct.stdWarehouse);
+              movement.fromQuantity = 10;
               movement.toProduct = toProduct._id;
               movement.toWarehouse = toProduct.stdWarehouse;
 
@@ -60,7 +61,7 @@ exports.run = function (server) {
           });
         });
       });
-
+      
 
       describe('Invalid input', function () {
 
@@ -244,7 +245,6 @@ exports.run = function (server) {
               done();
             });
           });
-
         });
 
         it('Inexistent toProduct - should return 422', function (done) {
@@ -273,30 +273,120 @@ exports.run = function (server) {
               expect(res.body.message).to.equal(messages["movement.warehouseNotFound"]);
               done();
             });
-          });
+          }).catch(done);
         });
 
-        it('Nonallowed Negative stock - should return 422');
+        it('Nonallowed Negative stock - should return 422', function(done) {
+          let promises = [helper.saveProduct(server), helper.saveProduct(server)];
+
+          Q.all(promises).spread(function(fromProduct, toProduct) {
+            let movement = new config.TransferMovement(fromProduct._id, fromProduct.stdWarehouse);
+            movement.fromQuantity = 10;
+            movement.toProduct = toProduct._id;
+            movement.toWarehouse = toProduct.stdWarehouse;
+
+            postMovement(server, movement, function(err, res) {
+              expect(res.statusCode).to.equal(422);
+              expect(res.body.message).to.eql(messages["movement.negativeStock"]);
+              done();
+            });
+          }).catch(done)
+        });
       });
     });
 
     describe('Update', function () {
-      it('Valid input');
+      describe('Valid Input', function() {
+        it('Positive stock', function(done) {
+          helper.saveInputMovement(server).then(function(movement) {
+            var product = movement.in[0].product;
+            var warehouse = movement.in[0].warehouse;
+            cancelMovement(server, movement, function(err, res) {
+              expect(res.statusCode).to.equal(204);
+              helper.getStockInWarehouse(server, product, warehouse)
+              .then(function(stock) {
+                expect(stock.quantity).to.equal(0);
+                expect(stock._version).to.equal(1);
+                expect(stock.movement).to.equal(movement._id);
+                done();
+              }).catch(done);
+            })
+          });
+        });
+
+        it('Allowed Negative Stock');
+      });
 
       describe('Invalid input', function () {
-        it('Invalid movement Id');
-        it('Inexistent movement');
-        it('Invalid payload');
+        it('Invalid movement Id - Should return 400', function(done) {
+          cancelMovement(server, {_id: '0123'}, function(err, res) {
+            expect(res.statusCode).to.equal(400);
+            expect(res.body.message).to.contain('movementId');
+            done(err);
+          });
+        });
+
+        it('Inexistent movement - Should return 404', function(done) {
+          cancelMovement(server, {_id: '012345678901234567890123'}, function(err, res) {
+            expect(res.statusCode).to.equal(404);
+            done(err);
+          });
+        });
+
+        it('Cancel generates nonallowed negative stock - Should return 422', function(done) {
+          let promises = [helper.saveInputMovement(server), helper.saveProduct(server)];
+
+          Q.all(promises).spread(function(input, toProduct) {
+            let transfer = new config.TransferMovement();
+            transfer.fromProduct = input.in[0].product;
+            transfer.fromWarehouse = input.in[0].warehouse;
+            transfer.fromQuantity = 3;
+            transfer.toProduct = toProduct._id;
+            transfer.toWarehouse = toProduct.stdWarehouse;
+
+            postMovement(server, transfer, function(err, res) {
+              cancelMovement(server, input)
+              .then(function(res) {
+                expect(res.statusCode).to.equal(422);
+                expect(res.body.message).to.eql(messages["movement.negativeStock"]);
+                done(err);
+              }).catch(done);
+            });
+          }).catch(done);
+        });
       });
     });
   });
 }
 
 function postMovement(server, movement, callback) {
+
   var request = require('supertest');
+
+  if (!callback) {
+    return request(server.listener)
+    .post('/movements/transfers')
+    .send(movement)
+  }
 
   request(server.listener)
     .post('/movements/transfers')
     .send(movement)
     .end(callback)
+}
+
+function cancelMovement(server, movement, callback) {
+  var request = require('supertest');
+
+  if (!callback) {
+    return request(server.listener)
+    .patch(`/movements/${movement._id}`)
+    .send({cancelled: true})
+  }
+
+  request(server.listener)
+    .patch(`/movements/${movement._id}`)
+    .send({cancelled: true})
+    .end(callback)
+
 }

@@ -54,6 +54,9 @@ exports.create = {
 
       switch (err.name) {
         case 'ValidationError':
+          if (getErrorMessage(err) === 'movement.unexpectedValidationError') {
+            log.error(request, err);
+          }
           return reply(Boom.badData(request.i18n.__(getErrorMessage(err))));
         case 'NotFound':
           return reply((Boom.notFound(request.i18n.__("movement.notFound"))));

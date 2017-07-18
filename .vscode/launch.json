@@ -10,9 +10,6 @@
             "protocol": "inpector",
             "name": "Mocha Tests",
             "program": "/home/phillip/.nvm/versions/node/v8.1.4/lib/node_modules/mocha/bin/_mocha",
-            "env": {
-                "NODE_DEBUG": "debug"
-            },
             "args": [
                 "-u",
                 "tdd",
@@ -35,7 +32,7 @@
             "name": "Debug Mode",
             "program": "${workspaceRoot}/server/server.js",
             "env": {
-                "NODE_DEBUG": "debug"
+                "NODE_DEBUG": "trace"
             }
         }
     ]

@@ -193,5 +193,10 @@ exports.endpoints = [
     method: 'post',
     path: '/movements/input',
     config: InputMovementController.create
+  },
+  {
+    method: 'patch',
+    path: '/movements/{movementId}',
+    config: TransferMovementController.patch
   }
 ];
