@@ -2,12 +2,14 @@
 
 const Joi = require('joi'),
 	  Boom = require('boom'),
-	  httpTools = require('../utils/httpTools'),
-	  orderModel = require('../model/productionOrderModel'),
-	  productModel = require('../model/ProductModel').Product,
-	  format = require('../utils/format'),
+	  httpTools = require('../../utils/httpTools'),
+		orderModel = require('../../model/productionOrderModel'),
+		Q = require('q'),
+		orderAdapter = require('./productionOrderAdapter'),
+	  productModel = require('../../model/ProductModel').Product,
+	  format = require('../../utils/format'),
 	  _ = require('lodash'),
-	  logFactory = require('../utils/log'),
+	  logFactory = require('../../utils/log'),
 	  log = new logFactory.Logger('productionOrderController');
 
 Joi.objectId = require('joi-objectid')(Joi);
@@ -30,7 +32,7 @@ exports.createOrder = {
 	validate: {
 		payload: orderPayloadValidate
 	},
-	handler: function(request, reply) {
+	handler: function(request, reply) {		
 
 		productModel.findById(request.payload.productId, function(err, doc){
 			if (err) {
@@ -157,5 +159,20 @@ exports.deleteOrder = {
 
 			return reply().code(204);
 		});
+	}
+}
+
+
+exports.test = {
+	validate: {
+		payload: orderPayloadValidate
+	},
+	handler: function(request, reply) {
+
+		let orderInstance = new orderModel(request.payload);
+		orderInstance.code = Math.random().toString();
+
+		orderAdapter.createOrder(orderInstance)
+		.done(reply)
 	}
 }

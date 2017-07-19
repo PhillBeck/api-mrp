@@ -5,6 +5,8 @@ const mongoose = require('mongoose'),
   uuid = require('uuid/v4'),
   idExists = require('mongoose-idexists'),
   mongoosePaginate = require('mongoose-paginate');
+
+  mongoose.Promise = require('q').Promise;
   
 const pledgeSchema = new Schema({
   product: {type: Schema.Types.ObjectId, ref: 'product', required: true},

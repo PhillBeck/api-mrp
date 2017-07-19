@@ -2,7 +2,9 @@
 
 const mongoose = require('mongoose'),
 	  Schema = mongoose.Schema,
-	  mongoosePaginate = require('mongoose-paginate');
+		mongoosePaginate = require('mongoose-paginate');
+			
+		mongoose.Promise = require('q').Promise;
 
 var productionOrderSchema = new Schema({
 	productId: {type: Schema.Types.ObjectId, ref: 'produtos', required: true},

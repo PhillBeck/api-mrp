@@ -1,7 +1,7 @@
 // Load modules
 var Product = require('./controller/ProductController'),
     Necessity = require('./controller/NecessityController'),
-    ProductionOrder = require('./controller/productionOrderController'),
+    ProductionOrder = require('./controller/productionOrders/productionOrderController'),
     WarehouseController = require('./controller/WarehouseController'),
     NFController = require('./controller/NFController'),
     TransferMovementController = require('./controller/movements/transferMovementController'),
@@ -198,5 +198,10 @@ exports.endpoints = [
     method: 'patch',
     path: '/movements/{movementId}',
     config: TransferMovementController.patch
+  },
+  {
+    method: 'post',
+    path: '/productionOrders/test',
+    config: ProductionOrder.test
   }
 ];
