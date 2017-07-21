@@ -203,5 +203,10 @@ exports.endpoints = [
     method: 'post',
     path: '/productionOrders/test',
     config: ProductionOrder.test
+  },
+  {
+    method: 'get',
+    path: '/productionOrders/test/{warehouse}/{product}',
+    config: ProductionOrder.testAgrregate
   }
 ];

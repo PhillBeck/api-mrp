@@ -15,7 +15,7 @@ function Product(stdWarehouse) {
 }
 
 function ProductionOrder(productId) {
-    this.productId = productId;
+    this.product = productId;
     this.code = Math.random().toString();
     this.originalDeadline = '2017-06-19';
     this.revisedDeadline = '2017-06-19';

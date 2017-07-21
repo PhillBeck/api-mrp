@@ -58,14 +58,14 @@ exports.run = function(server) {
 
 			it('Missing productId - Should return 400', function(done) {
 				let payload = new config.ProductionOrder();
-				delete payload.productId;
+				delete payload.product;
 
 				request(server.listener)
 				.post('/productionOrders')
 				.send(payload)
 				.end(function(err, res) {
 					expect(res.statusCode).to.equal(400);
-					expect(res.body.message).to.contain('productId');
+					expect(res.body.message).to.contain('product');
 					done(err);
 				});
 			});
@@ -104,7 +104,7 @@ exports.run = function(server) {
 				.send(new config.ProductionOrder('0123'))
 				.end(function(err, res) {
 					expect(res.statusCode).to.equal(400);
-					expect(res.body.message).to.contain('productId');
+					expect(res.body.message).to.contain('product');
 					done(err);
 				});
 			});

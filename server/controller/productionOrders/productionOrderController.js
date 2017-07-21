@@ -6,7 +6,8 @@ const Joi = require('joi'),
 		orderModel = require('../../model/productionOrderModel'),
 		Q = require('q'),
 		orderAdapter = require('./productionOrderAdapter'),
-	  productModel = require('../../model/ProductModel').Product,
+		productModel = require('../../model/ProductModel').Product,
+		pledgeModel = require('../../model/pledgeModel'),
 	  format = require('../../utils/format'),
 	  _ = require('lodash'),
 	  logFactory = require('../../utils/log'),
@@ -19,7 +20,7 @@ Joi.objectId = require('joi-objectid')(Joi);
 const orderPayloadValidate = {
 	_id:              Joi.objectId(),
 	code:             Joi.string(),
-	productId:        Joi.objectId().required(),
+	product:          Joi.objectId().required(),
 	quantity:         Joi.number().required(),
 	originalDeadline: Joi.date().iso().required(),
 	revisedDeadline:  Joi.date().iso(),
@@ -34,7 +35,7 @@ exports.createOrder = {
 	},
 	handler: function(request, reply) {		
 
-		productModel.findById(request.payload.productId, function(err, doc){
+		productModel.findById(request.payload.product, function(err, doc){
 			if (err) {
 				log.error(request, {err: 'Mongo Error', message: err});
 				return reply(Boom.badImplementation());
@@ -174,5 +175,18 @@ exports.test = {
 
 		orderAdapter.createOrder(orderInstance)
 		.done(reply)
+	}
+}
+
+exports.testAgrregate = {
+	validate: {},
+	handler: function(request, reply) {
+
+		pledgeModel.calculatePledges(request.params.product, request.params.warehouse)
+		.then(reply)
+		.catch((err) => {
+			console.log(err);
+			reply(err);
+		}).done();
 	}
 }

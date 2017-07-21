@@ -387,7 +387,7 @@ function validateDelete(id, callback) {
 
 function validateProductionOrder(id, callback) {
 	productionOrderModel.count(
-		{ productId: id, DELETED: false }
+		{ product: id, DELETED: false }
 		, function(err, count) {
 			if (err) {
 				return callback({error: 'mongoError', message: err}, null);

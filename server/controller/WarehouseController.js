@@ -5,7 +5,9 @@ const Joi = require('joi'),
 	  httpTools = require('../utils/httpTools'),
 		ProductModel = require('../model/ProductModel').Produto,
 		stockModel = require('../model/stockModel'),
-	  WarehouseModel = require('../model/WarehouseModel').Warehouse,
+		pledgeModel = require('../model/pledgeModel'),
+		WarehouseModel = require('../model/WarehouseModel').Warehouse,
+		productionOrderModel = require('../model/productionOrderModel'),
 	  format = require('../utils/format'),
 	  _ = require('lodash'),
 	  logFactory = require('../utils/log'),
@@ -165,16 +167,56 @@ exports.getProductStock = {
 		}
 	},
 	handler: function(request, reply) {
-		stockModel.findOne({warehouse: request.params.warehouseId, product: request.params.productId})
+
+		let promises = [];
+		var product = request.params.productId;
+		var warehouse = request.params.warehouseId;
+
+		getStock(warehouse, product)
+		.then(reply)
+		.done();
+	}
+}
+
+function getStock(warehouse, product) {
+	return stockModel
+		.findOne({warehouse: warehouse, product: product})
 		.then((stock) => {
 			if (!stock) {
-				return reply(Boom.notFound(request.i18n.__("stock.notFound")));
+				stock = {
+					product: product,
+					warehouse: warehouse,
+				}
 			}
-			reply(stock)
+	
+			stock.stock = stock.quantity || 0;
+			delete stock.quantity;
+
+			return stock;
 		})
-		.catch((err) => {
-			log.error(request, err);
-			reply(Boom.badImplementation());
+		.then(getPledgeTotal.bind(this, warehouse, product))
+		.then(getTotalPlannedProduction.bind(this, warehouse, product))
+		.catch((err) => { throw err });
+}
+
+function getPledgeTotal(warehouse, product, stock) {
+	return pledgeModel
+		.calculatePledges(product, warehouse)
+		.then((pledges) => {
+			return (pledges[0] && pledges[0].quantity) || 0;
+		}).then((pledge) => {
+			stock.pledged = pledge;
+			return stock;
 		})
-	}
+		.catch((err) => { throw err });
+}
+
+function getTotalPlannedProduction(warehouse, product, stock) {
+	return productionOrderModel
+		.getTotalPlannedProduction(warehouse, product)
+		.then((planned) => {
+			stock.planned = planned || 0;
+			return stock;
+		})
+		.catch((err) => { throw err });
 }
