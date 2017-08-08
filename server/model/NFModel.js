@@ -5,6 +5,8 @@ var mongoose = require('mongoose'),
 	mongoosePaginate = require('mongoose-paginate'),
 	mongooseAggregatePaginate = require('mongoose-aggregate-paginate');
 
+mongoose.Promise = require('q').Promise;
+
 
 var NFSchema = new Schema ({
   nf: {type: String, required: true},

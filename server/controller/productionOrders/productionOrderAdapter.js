@@ -3,6 +3,7 @@
 const Q = require('q'),
   productModel = require('../../model/ProductModel').Product,
   pledgeModel = require('../../model/pledgeModel'),
+  MongoError = require('mongodb-core').MongoError,
   log = require('logbro'),
   orderModel = require('../../model/productionOrderModel');
 
@@ -20,7 +21,9 @@ class Transaction {
       var self = this;
       self.operation = 'create'
 
-      return self.saveOrder.bind(self)()
+      return self.validateWarehouse.apply(self)
+      .then(self.saveOrder.bind(self))
+      .then(() => { self.orderSaved = true })
       .then(self.calculatePledges.bind(self, self.orderInstance, self.orderInstance.quantity))
       .then(self.savePledges.bind(self))
       .then(() => { 
@@ -32,7 +35,32 @@ class Transaction {
 
         return self.rollbackOrder.bind(self)()
         .then(self.rollbackPledges.bind(self))
-        .then(() => { return Q.reject(err) });
+        .then(() => { return Q.reject(err) })
+        .catch((err) => {return Q.reject(self.formatError.apply(self, [err])) })
+      });
+  }
+
+  updateOrder() {
+    log.debug('updateOrder starting');
+
+    var self = this;
+
+
+
+  }
+
+  validateWarehouse() {
+    var self = this;
+
+    if (self.orderInstance.warehouse) {
+      return Q.resolve();
+    }
+
+    return productModel.findById(self.orderInstance.product)
+      .then((product) => {
+        if (product) {
+          self.orderInstance.warehouse = product.stdWarehouse;
+        }
       });
   }
 
@@ -55,8 +83,10 @@ class Transaction {
     log.debug('calculatePledges Started');
     var self = this;
 
-    var produto = product;
-    var quantidade = quantity;
+    if (product.cancelled === true) {
+      self.pledges = [];
+      return Q.resolve();
+    }
 
     return Q.Promise(function(resolve, reject) {
       
@@ -64,6 +94,7 @@ class Transaction {
       // Now it can be called as calculatePledges(orderInstance, quantity)
       // Or calculatePledges(productId, quantity)
       product = product.productId || product;
+
       quantity = quantity || 1;
 
       var searchConfig = {
@@ -109,10 +140,6 @@ class Transaction {
         });
 
         Q.all(promises).then(() => {
-          if (process.env.TRETA) {
-            reject('forced error');
-          }
-
           log.debug('calculatePledges Resolved');
           resolve();
         }).catch((err) => {
@@ -123,11 +150,21 @@ class Transaction {
 
 
       }).catch((err) => {
+        if (err.error === 'notFound') {
+          log.debug('calculatePledges resolved - no children');
+          return resolve();
+        }
+
         log.debug('calculatePledges Rejected external');
         log.debug(err)
         reject(err);
       });
     });
+  }
+
+  deletePledges() {
+    var self = this;
+    return pledgeModel.remove({productionorder: self.orderInstance._id})
   }
 
   savePledges() {
@@ -152,16 +189,17 @@ class Transaction {
   rollbackOrder() {
     var self = this;
 
-    if (!self.orderInstance._version || self.orderInstance._version === 0) {
-      return self.rollbackPledges.apply(self)
-             .then(self.orderInstance.remove.bind(self.orderInstance))
-    }
-
     return self.rollbackPledges.apply(self)
-           .then(() => {
-             let version = self.orderInstance._version - 1;
-             return self.orderInstance.revert.apply(self.orderInstance, version);
-           });
+    .then(()=> {
+      if (self.orderSaved) {
+        if (!self.orderInstance._version || self.orderInstance._version === 0) {
+          return self.orderInstance.remove.apply(self.orderInstance);
+        }
+
+        let version = self.orderInstance._version - 1;
+        return self.orderInstance.revert.apply(self.orderInstance, version);
+      }
+    });
   }
 
   rollbackPledges() {
@@ -184,6 +222,34 @@ class Transaction {
 
   }
 
+  formatError(err) {
+    var self = this;
+    if (err.name === 'MongoError') {
+      if (err.code === 11000) {
+        return { name: 'MongoError', msg: 'Duplicate Key', errObj: err }
+      }
+
+      return { name: 'MongoError', msg: err.message, errObj: err }
+    }
+
+    if (err.name === 'ValidationError') {
+      return { name: 'ValidationError', target: self.getVAlidationErrorTarget(err), errObj: err }
+    }
+
+    return { name: 'UnexpectedError', msg: '', errorObj: err };
+  }
+
+  getVAlidationErrorTarget(err) {
+    if (err.errors && err.errors.product) {
+      return "product";
+    }
+
+    if (err.errors && err.errors.warehouse) {
+      return "warehouse";
+    }
+
+    return 'Unexpected';
+  }
 }
 
 function createOrder(orderInstance) {
@@ -194,16 +260,18 @@ function createOrder(orderInstance) {
 
   var transaction = new Transaction(orderInstance);
 
-  return transaction.createOrder()
-  .then((order) => {
-    return pledgeModel.find({productionOrder: order._id})
-  }).catch((err) => {
-    if (err === 'forced error') {
-      return pledgeModel.find({productionOrder: orderInstance._id})
-    }
+  return transaction.createOrder();
+}
 
-    return Q.reject(err);
-  })
+function updateOrder(orderInstance) {
+
+  if (typeof(orderInstance.save) !== 'function') {
+    orderInstance = new orderModel(orderInstance);
+  }
+
+  var transaction = new Transaction(orderInstance);
+
+  return transaction.updateOrder();
 }
 
 module.exports = {

@@ -5,7 +5,9 @@ const mongoose = require('mongoose'),
   uuid = require('uuid/v4'),
   idExists = require('mongoose-idexists'),
   mongooseRollback = require('mongoose-rollback'),
-	mongoosePaginate = require('mongoose-paginate');
+  mongoosePaginate = require('mongoose-paginate');
+  
+mongoose.Promise = require('q').Promise;
 
 var stockSchema = new Schema({
   product: {type: Schema.Types.ObjectId, ref: 'product', required: true},

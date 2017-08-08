@@ -10,6 +10,9 @@
             "protocol": "inpector",
             "name": "Mocha Tests",
             "program": "/home/phillip/.nvm/versions/node/v8.1.4/lib/node_modules/mocha/bin/_mocha",
+            "env" : {
+                "NODE_DEBUG": "error"
+            },
             "args": [
                 "-u",
                 "tdd",

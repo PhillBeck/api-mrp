@@ -3,7 +3,9 @@
 var mongoose = require('mongoose'),
 	Schema = mongoose.Schema,
 	mongoosePaginate = require('mongoose-paginate'),
-	mongooseAggregatePaginate = require('mongoose-aggregate-paginate');
+  mongooseAggregatePaginate = require('mongoose-aggregate-paginate');
+  
+mongoose.Promise = require('q').Promise;
 
 
 var WarehouseSchema = new Schema ({

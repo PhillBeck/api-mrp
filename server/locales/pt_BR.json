@@ -11,6 +11,7 @@
 	"produto.addChildren.circularDependencies": "O produto filho já é utilizado em um nível superior",
 	"productionOrder.codeNotUnique": "O campo 'code' não pode conter um valor duplicado",
 	"productionOrder.productNotFound": "O produto não foi encontrado",
+	"productionOrder.warehouseNotFound": "O armazém não foi encontrado",
 	"productionOrder.notFound": "Ordem de Produção não encontrada",
 	"product.delete.productionOrderReference": "O produto não pode ser excluído pois é referenciado em ordens de produção",
 	"product.delete.necessityReference": "O produto não pode ser excluído pois é referenciado em necessidades",

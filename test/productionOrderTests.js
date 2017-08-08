@@ -2,7 +2,8 @@
 
 const assert = require('assert'),
 	  config = require('./config'),
-    createRequests = config.requests,
+		createRequests = config.requests,
+		helper = require('./promises'),
 	  expect = require('chai').expect,
 	  request = require('supertest'),
 	  fs = require('fs'),
@@ -18,18 +19,17 @@ exports.run = function(server) {
     var warehouse;
 
 		before(function(done) {
-      createRequests.createWarehouse(server, undefined, function(err, doc) {
-        warehouse = doc._id;
-        createRequests.createProduct(server, new config.Product(warehouse), function(err, doc) {
-          productId = doc._id;
-          done();
-        });
-      });
+			helper.saveProduct(server)
+			.then((product) => {
+				warehouse = product.stdWarehouse; 
+				productId = product._id;
+				done();
+			});
 		});
 
 		describe('Valid Input', function() {
 
-			it('Should Return 201', function(done) {
+			it("Should Return 201 - product's stdWarehouse", function(done) {
 				request(server.listener)
 				.post('/productionOrders')
 				.send(new config.ProductionOrder(productId))
@@ -38,9 +38,37 @@ exports.run = function(server) {
 					expect(res.body._id).to.exist;
 					expect(res.body.DELETED).to.be.undefined;
 					expect(res.body.__v).to.be.undefined;
+					expect(res.body.warehouse).to.eql(warehouse);
 					expect(res.body.createdAt).to.be.undefined;
 					expect(res.body.updatedAt).to.be.undefined;
 					done(err);
+				});
+			});
+
+			it("Should Return 201 - not product's stdWarehouse", function(done) {
+				helper.saveWarehouse(server).then((savedWarehouse) => {
+					let order = new config.ProductionOrder(productId);
+					order.warehouse = savedWarehouse._id;
+					order.quantity = 50;
+
+					request(server.listener)
+					.post('/productionOrders')
+					.send(order)
+					.end(function(err, res) {
+						expect(res.statusCode).to.equal(201);
+						expect(res.body._id).to.exist;
+						expect(res.body.DELETED).to.be.undefined;
+						expect(res.body.__v).to.be.undefined;
+						expect(res.body.warehouse).to.eql(savedWarehouse._id);
+						expect(res.body.createdAt).to.be.undefined;
+						expect(res.body.updatedAt).to.be.undefined;
+
+						helper.getStockInWarehouse(server, productId, savedWarehouse._id)
+						.then((stock) => {
+							expect(stock.planned).to.equal(50);
+							done();
+						}).catch(done);
+					});
 				});
 			});
 		});
@@ -468,7 +496,6 @@ exports.run = function(server) {
 			});
 
 			it('Order with pointed production - should return 422');
-
 		});
 	});
 }

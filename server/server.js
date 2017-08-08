@@ -9,9 +9,10 @@ var Hapi = require('hapi'),
 var app = {};
 	app.config = Config;
 
-var server = new Hapi.Server();
+var server = new Hapi.Server({ connections: { router: { stripTrailingSlash: true } } });
 
 server.connection({ port: app.config.server.port });
+
 
 server.route(Routes.endpoints);
 

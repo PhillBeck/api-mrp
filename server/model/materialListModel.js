@@ -2,7 +2,9 @@
 
 const mongoose = require('mongoose'),
 	  Schema = mongoose.Schema,
-	  paginateArray = require('../utils/mongoose-paginate-array');
+		paginateArray = require('../utils/mongoose-paginate-array');
+		
+mongoose.Promise = require('q').Promise
 
 
 var necessityMaterialItemSchema = new Schema({

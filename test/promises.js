@@ -21,7 +21,7 @@ function saveWarehouse(server, warehouse) {
     let warehouseToSend = warehouse || new config.Warehouse();
 
     request(server.listener)
-    .post('/warehouses')
+    .post('/warehouses/')
     .send(warehouseToSend)
     .end(function(err, res) {
       return resolve(res.body);
@@ -80,15 +80,12 @@ function saveInputMovement(server, movement) {
 }
 
 function saveProductionOrder(server, product) {
-  return Q.Promise(function(resolve, request, notify) {
-    promiseProductionOrder(server, product).then(function(productionOrder) {
-      request(server.listener)
-      .post('/productionOrders')
-      .send(productionOrder)
-      .end(function(err, res) {
-        resolve(res.body);
-      });
-    });
+  return promiseProductionOrder(server, product)
+  .then(function(productionOrder) {
+    return request(server.listener)
+    .post('/productionOrders')
+    .send(productionOrder)
+    .then((res) => { return res.body })
   });
 }
 
@@ -115,9 +112,11 @@ function getStockInWarehouse(server, product, warehouse) {
   });
 }
 
+
 module.exports = {
   saveWarehouse: saveWarehouse,
   saveProduct: saveProduct,
   saveInputMovement: saveInputMovement,
-  getStockInWarehouse: getStockInWarehouse
+  getStockInWarehouse: getStockInWarehouse,
+  saveProductionOrder: saveProductionOrder
 }

@@ -4,7 +4,9 @@ const mongoose = require('mongoose'),
 	Schema = mongoose.Schema,
   uuid = require('uuid/v4'),
   idExists = require('mongoose-idexists'),
-	mongoosePaginate = require('mongoose-paginate');
+  mongoosePaginate = require('mongoose-paginate');
+  
+mongoose.Promise = require('q').Promise;
 
 var movementItemSchema = new Schema({
   product: {type: Schema.Types.ObjectId, ref: 'product', required: true},

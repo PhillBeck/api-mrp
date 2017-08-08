@@ -5,6 +5,8 @@ var mongoose = require('mongoose'),
 	mongoosePaginate = require('mongoose-paginate'),
 	mongooseAggregatePaginate = require('mongoose-aggregate-paginate');
 
+mongoose.Promise = require('q').Promise;
+
 
 var NecessityItemSchema = new Schema({
 	productId: {type: Schema.Types.ObjectId, ref: 'produtos', required: true},

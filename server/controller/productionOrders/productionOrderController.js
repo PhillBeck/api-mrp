@@ -21,12 +21,13 @@ const orderPayloadValidate = {
 	_id:              Joi.objectId(),
 	code:             Joi.string(),
 	product:          Joi.objectId().required(),
+	warehouse:        Joi.objectId(),
 	quantity:         Joi.number().required(),
 	originalDeadline: Joi.date().iso().required(),
 	revisedDeadline:  Joi.date().iso(),
 	type:             Joi.number().valid([1, 2]).required(),
 	salesOrderId:     Joi.objectId(),
-  status:           Joi.number().valid([0, 1, 2])
+	status:           Joi.number().valid([0, 1, 2]),
 }
 
 exports.createOrder = {
@@ -35,31 +36,34 @@ exports.createOrder = {
 	},
 	handler: function(request, reply) {		
 
-		productModel.findById(request.payload.product, function(err, doc){
-			if (err) {
-				log.error(request, {err: 'Mongo Error', message: err});
-				return reply(Boom.badImplementation());
+		let orderInstance = new orderModel(request.payload);	
+
+		orderAdapter.createOrder(orderInstance)
+		.then((order) => {
+			reply(format(order, ['DELETED', 'createdAt', 'updatedAt', '__v', '_version']))
+			.created(`/movements/${order._id}`);
+		})
+		.catch((err) => {
+			if (err.msg === 'Duplicate Key') {
+				return reply(Boom.badData(request.i18n.__("productionOrder.codeNotUnique")));
 			}
 
-			if (!doc) {
-				return reply(Boom.badData(request.i18n.__("productionOrder.productNotFound")));
+			if (err.name === 'ValidationError') {
+				if (err.target === 'product') {
+					return reply(Boom.badData(request.i18n.__("productionOrder.productNotFound")));
+				}
+
+				if (err.target === 'warehouse') {
+					return reply(Boom.badData(request.i18n.__("productionOrder.warehouseNotFound")));
+				}
 			}
 
-			let orderInstance = new orderModel(request.payload);
+			log.error(request, err.errObj);
+			return reply(Boom.badImplementation());
 
-			orderInstance.save(function(err, doc) {
-				if (!err) {
-					return reply(format(doc, ['DELETED', '__v', 'createdAt', 'updatedAt']))
-					.created('/productionOrders/' + doc._id);
-				}
-
-				if (err.code && err.code === 11000) {
-					return reply(Boom.badData(request.i18n.__("productionOrder.codeNotUnique")));
-				}
-
-				log.error(request, {err: 'Mongo Error', message: err});
-				return reply(Boom.badImplementation());
-			});
+		}).done(undefined, (err) => {
+			log.error(request, err);
+			return reply(Boom.badImplementation());
 		});
 	}
 }
@@ -76,7 +80,7 @@ exports.listOrders = {
 		httpTools.searchQuery(null, request.query, {}, function(search, filters) {
 
 			search["$and"] = [{DELETED: {$eq: false}}];
-			filters.select= {DELETED: 0, __v: 0, createdAt: 0, updatedAt: 0};
+			filters.select= {DELETED: 0, __v: 0, createdAt: 0, updatedAt: 0, _version: 0};
 
 			orderModel.paginate(search, filters, function(err, obj) {
 				if (err) {
@@ -99,7 +103,7 @@ exports.getOrderById = {
 		}
 	},
 	handler: function(request, reply) {
-		let options = {DELETED: 0, __v: 0, createdAt: 0, updatedAt: 0};
+		let options = {DELETED: 0, __v: 0, createdAt: 0, updatedAt: 0, _version: 0};
 
 		orderModel.find({_id: request.params.orderId, DELETED: false})
 		.select(options)
@@ -170,11 +174,7 @@ exports.test = {
 	},
 	handler: function(request, reply) {
 
-		let orderInstance = new orderModel(request.payload);
-		orderInstance.code = Math.random().toString();
-
-		orderAdapter.createOrder(orderInstance)
-		.done(reply)
+		
 	}
 }
 
@@ -189,4 +189,13 @@ exports.testAgrregate = {
 			reply(err);
 		}).done();
 	}
+}
+
+function getErrorMessage(err) {
+	switch (err.name) {
+		case 'Duplicate Key':
+			return "productionOrder.codeNotUnique";
+	}
+
+	return "productionOrder."
 }

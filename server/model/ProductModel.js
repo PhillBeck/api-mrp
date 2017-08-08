@@ -8,6 +8,9 @@ var mongoose = require('mongoose'),
   idExists = require('mongoose-idexists'),
   config = process.env.NODE_ENV === undefined ? require('../config/development') : require('../config/' + process.env.NODE_ENV),
   options = config.neo4j;
+
+mongoose.Promise = require('q').Promise;
+
 /**
   * @module  Produto
   * @description Produto schema
