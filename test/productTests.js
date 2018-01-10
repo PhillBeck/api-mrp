@@ -356,6 +356,7 @@ exports.run = function(server) {
 						request(server.listener)
 						.delete('/products/' + testProduct[1]._id)
 						.end(function(err, res) {
+							if (err) done(err)
 							expect(res.statusCode).to.equal(422);
 							expect(res.body.message).to.contain(messages["product.delete.productionOrderReference"]);
 							done(err);

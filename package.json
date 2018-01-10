@@ -8,14 +8,14 @@
   },
   "dependencies": {
     "async": "^2.4.1",
-    "boom": "*",
+    "boom": "7.1.1",
     "bunyan": "^1.8.10",
     "fs-extra": "^3.0.0",
-    "hapi": "*",
+    "hapi": "15.2.0",
     "hapi-bunyan": "https://github.com/PhillBeck/hapi-bunyan/tarball/master",
     "hapi-i18n": "^1.0.4",
     "hapi-locale": "^1.0.2",
-    "joi": "*",
+    "joi": "13.1.0",
     "joi-objectid": "^2.0.0",
     "joi18n": "0.0.18",
     "kue": "^0.11.5",
@@ -37,8 +37,7 @@
   "keywords": [
     "node.js",
     "hapi.js",
-    "mongoose",
-    "angular"
+    "mongoose"
   ],
   "author": {
     "name": "Phillip Beck",
@@ -51,6 +50,6 @@
     "supertest": "^3.0.0"
   },
   "scripts": {
-    "test": "mocha -t 100000"
+    "test": "mocha -t 10000"
   }
 }
