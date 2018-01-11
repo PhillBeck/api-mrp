@@ -3,7 +3,7 @@
 module.exports = {
 	server: {
 		host: '0.0.0.0',
-		port: 9002
+		port: 9000
 	},
 	database: {
 		host: 'localhost',

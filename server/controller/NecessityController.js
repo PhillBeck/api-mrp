@@ -198,7 +198,7 @@ exports.getItemsByNecessityId = {
 						{$skip: options.skip},
 						{$limit: options.limit},
 						{$lookup: {
-							from: "produtos",
+							from: "products",
 							localField: "items.productId",
 							foreignField: "_id",
 							as: "items.productInfo"
@@ -223,6 +223,8 @@ exports.getItemsByNecessityId = {
 								console.log(e);
 								return reply(Boom.badImplementation());
 							}
+
+							console.log(docs)
 
 							try {
 								var ret = docs[0];
