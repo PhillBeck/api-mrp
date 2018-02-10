@@ -11,7 +11,7 @@ services:
     command: mongod --quiet
 
   neo4j:
-    image: neo4j:3.2
+    image: neo4j:3.3
     environment:
       - NEO4J_AUTH=none
     volumes:
@@ -24,7 +24,7 @@ services:
   app:
     build: .
     ports:
-      - '9002:9000'
+      - '9000:9000'
     environment:
       - NODE_ENV=production
     restart: always

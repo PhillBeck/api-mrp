@@ -176,7 +176,7 @@ exports.getItemsByNecessityId = {
 
 		var options = {};
 		options.page = request.query._page === undefined ? 1 : request.query._page;
-		options.limit = request.query._limit === undefined ? 10 : request.query._limit;
+		options.limit = request.query._limit === undefined ? 10000 : request.query._limit;
 		options.skip = options.limit * (options.page - 1);
 
 		Necessity.aggregate([

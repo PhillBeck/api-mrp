@@ -2,7 +2,11 @@ FROM node:8.1-alpine
 
 ADD package.json /app/package.json
 
-RUN cd app && npm i
+ADD yarn.lock /app/yarn.lock
+
+RUN apk update && apk add yarn
+
+RUN cd app && yarn
 
 ADD server /app/server
 
