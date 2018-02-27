@@ -10,6 +10,8 @@ RUN cd app && yarn
 
 ADD server /app/server
 
+ADD files /app/files
+
 EXPOSE 9000
 
 CMD cd /app && node server/server.js

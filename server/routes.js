@@ -90,7 +90,7 @@ exports.endpoints = [
     config: Necessity.updateItem
   },
   {
-    method: 'get',
+    method: 'post',
     path: '/necessities/{necessityId}/materials',
     config: Necessity.calculateMaterials
   },
@@ -99,11 +99,11 @@ exports.endpoints = [
     path: '/necessities/{necessityId}/items',
     config: Necessity.getItemsByNecessityId
   },
-  {
-    method: 'get',
-    path: '/materials/{_id}',
-    config: Necessity.getMaterials
-  },
+  // {
+  //   method: 'get',
+  //   path: '/materials/{_id}',
+  //   config: Necessity.getMaterials
+  // },
   {
     method: 'post',
     path: '/productionOrders',

@@ -6,7 +6,7 @@ services:
     ports:
       - '27017'
     volumes:
-      - /data/mongo/db:/data/db
+      - /data/mongo/db:/home/phillip/data/db
     restart: always
     command: mongod --quiet
 
@@ -15,7 +15,7 @@ services:
     environment:
       - NEO4J_AUTH=none
     volumes:
-      - /data/neo4j:/data
+      - /data/neo4j:/home/phillip/data
     restart: always
     ports:
       - '7474'

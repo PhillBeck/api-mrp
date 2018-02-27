@@ -30,7 +30,7 @@ function createlogger(name) {
 }
 
 function error(req, err) {
-	this.logger.error({
+	let errorMessage = {
 		err: err,
 		data: {
 			req_id: req.id,
@@ -38,7 +38,10 @@ function error(req, err) {
 			path: req.path,
 			payload: req.payload
 		}
-	});
+	}
+
+	console.log(errorMessage)
+	this.logger.error(errorMessage);
 }
 
 function warn(err) {

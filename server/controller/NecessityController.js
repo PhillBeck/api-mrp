@@ -11,7 +11,8 @@ var Joi = require('joi'),
 	log = require('../utils/log'),
 	formatOutput = require('../utils/format'),
 	shallowClone = require('../utils/shallowClone'),
-	materialList = require('../model/materialListModel');
+	materialList = require('../model/materialListModel'),
+	exportNecessity = require('../service/necessityExport');
 Joi.objectId = require('joi-objectid')(Joi);
 
 mongoose.Promise = require('q').Promise;
@@ -425,15 +426,21 @@ exports.calculateMaterials = {
 			if (!err) {
 				if (doc) {
 					calculateMaterials(doc, function(err, docs) {
+						if (err) {
+							console.log(err);
+							return reply(Boom.badImplementation());
+						}
 						let materialsModel = new materialList({items: docs});
 
-						materialsModel.save(function(err, doc) {
+						materialsModel.save(function(err, materials) {
 							if (err) {
 								console.log(err);
 								return reply(Boom.badImplementation());
 							}
 
-							return reply().code(204).header('location', '/materials/' + doc._id);
+							exportNecessity(materials)
+
+							return reply().code(204).header('location', '/materials/' + materials._id);
 						});
 					});
 				}

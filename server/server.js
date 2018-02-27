@@ -3,6 +3,7 @@ var Hapi = require('hapi'),
 	Db = require('./config/db'),
 	bunyan = require('bunyan'),
 	mongoStream = require('mongo-writable-stream'),
+	inert = require('inert'),
 	Config = process.env.NODE_ENV === undefined ? require('./config/development') : require('./config/' + process.env.NODE_ENV);
 
 
@@ -13,6 +14,21 @@ var server = new Hapi.Server({ connections: { router: { stripTrailingSlash: true
 
 server.connection({ port: app.config.server.port });
 
+server.register(require('inert'), (err) => {
+	if (err) {
+		throw err
+	}
+
+	server.route({
+		method: 'GET',
+		path: '/materials/{id}',
+		handler: {
+			file: function(request) {
+				return `files/${request.params.id}.xlsx`
+			}
+		}
+	})
+})
 
 server.route(Routes.endpoints);
 
