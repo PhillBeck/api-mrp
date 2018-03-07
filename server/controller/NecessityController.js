@@ -490,7 +490,7 @@ function calculateMaterials(necessity, callback) {
 		var searchConfig = {
 			depth: 0,
 			direction: '<',
-			recordsPerPage: 10,
+			recordsPerPage: 10000,
 			page: 0,
 			document : {}
 		};
@@ -498,12 +498,14 @@ function calculateMaterials(necessity, callback) {
 		searchConfig.document._id = item.productId;
 
 	ProductModel.getRelationships(searchConfig, function(err, obj) {
-			if (!err) {
-				let materials = [];
-				prepareMaterialsArray(obj.docs, item.quantity, materials);
-				return done(undefined, materials);
+			if (err) {
+				return done(err)
 			}
-			return done(err);
+
+			let materials = [];
+			prepareMaterialsArray(obj.docs, item.quantity, materials);
+			return done(undefined, materials);
+			
 		});
 	}, function(err, results) {
 
@@ -533,10 +535,11 @@ function prepareMaterialsArray(product, currentQuantity, array) {
 
 	if (product.relationProperties) {
 		let quantity = product.relationProperties.quantity === undefined ? 1 : product.relationProperties.quantity
-		currentQuantity = currentQuantity * product.relationProperties.quantity;
+		currentQuantity = currentQuantity * quantity;
 	}
 
 	obj.quantity = currentQuantity;
+	delete obj.relationships
 
 	array.push(obj);
 
