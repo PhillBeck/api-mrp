@@ -292,7 +292,7 @@ exports.getChildren = {
 		var searchConfig = {
 			depth: 0,
 			direction: '<',
-			recordsPerPage: 10,
+			recordsPerPage: 10000,
 			page: 0,
 			document : {}
 		};
@@ -354,7 +354,7 @@ function validateChildren(parentId, childId, callback) {
 	var searchConfig = {
 		depth: 0,
 		direction: '<',
-		recordsPerPage: 10,
+		recordsPerPage: 10000,
 		page: 0,
 		document : {}
 	};
@@ -431,7 +431,7 @@ function validateStructure(id,callback) {
 	let searchConfig = {
 		depth: 1,
 		direction: '>',
-		recordsPerPage: 10,
+		recordsPerPage: 10000,
 		page: 0,
 		document : {}
 	};

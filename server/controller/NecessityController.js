@@ -12,7 +12,8 @@ var Joi = require('joi'),
 	formatOutput = require('../utils/format'),
 	shallowClone = require('../utils/shallowClone'),
 	materialList = require('../model/materialListModel'),
-	exportNecessity = require('../service/necessityExport');
+	exportNecessity = require('../service/necessityExport'),
+	groupBy = require('../utils/arrayTools').groupBy;
 Joi.objectId = require('joi-objectid')(Joi);
 
 mongoose.Promise = require('q').Promise;
@@ -417,7 +418,8 @@ exports.calculateMaterials = {
 			necessityId: Joi.objectId().required()
 		},
 		query: {
-			_search: Joi.string()
+			_search: Joi.string(),
+			_groupBy: Joi.string()
 		}
 	},
 	handler: function(request, reply) {
@@ -437,6 +439,10 @@ exports.calculateMaterials = {
 								console.log(err);
 								return reply(Boom.badImplementation());
 							}
+
+							let groupTerm = request.query._groupBy || "family"
+
+							materials = groupBy(materials, groupTerm)
 
 							exportNecessity(materials)
 

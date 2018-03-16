@@ -133,15 +133,17 @@ const data = JSON.parse(`{
 `)
 
 module.exports = function exportNecessity(obj) {
-  let sheet = xlsx.utils.json_to_sheet(format(obj.items))
+	wb = xlsx.readFile("files/model.xlsx")
 
-  wb = xlsx.readFile("files/model.xlsx")
+	Object.keys(obj).forEach((key) => {
+		let sheet = xlsx.utils.json_to_sheet(format(obj.items))
 
-  if (!wb.Sheets['necessidade']) {
-    wb.SheetNames.push('necessidade')
-  }
-
-  wb.Sheets['necessidade'] = sheet
+		if (!wb.Sheets[key]) {
+			wb.SheetNames.push(key)
+		}
+	
+		wb.Sheets[key] = sheet
+	})
 
   xlsx.writeFile(wb, `files/${obj._id}.xlsx`)
 }

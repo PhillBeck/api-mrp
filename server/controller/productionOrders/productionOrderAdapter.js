@@ -100,7 +100,7 @@ class Transaction {
       var searchConfig = {
         depth: 1,
         direction: '<',
-        recordsPerPage: 20,
+        recordsPerPage: 10000,
         page: 0,
         document : { _id: product }
       };
